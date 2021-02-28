@@ -13,9 +13,11 @@
     "parse-srt": "^1.0.0-alpha",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
+    "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.2",
     "subtitle": "^4.0.1",
     "subtitles-parser": "0.0.2",
+    "wasm-ffprobe": "^1.0.1",
     "web-vitals": "^1.1.0"
   },
   "scripts": {

@@ -28,9 +28,6 @@ import Box from '@material-ui/core/Box';
 import SubtitleFile from './assets/DWSubtitles.srt';
 import parseSRT from 'parse-srt';
 import Result from './Result';
-import Upload from './Upload';
-import Nav from './Nav';
-import Footer from './Footer';
 import {BrowserRouter as Router, Switch, Route} from 'react-router-dom';
 import {Link} from 'react-router-dom';
 
@@ -92,34 +89,46 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-
-export default function Album() {
+export default function Album(props) {
   const classes = useStyles();
+  console.log("MATCH1:" + props);
+
+  const tileData = props.location.state;
+
+  console.log("TILEDATA2:" + tileData);
 
   return (
 
     <div className="App">
-      <Router>
+      {/* { video && <video
+        controls
+        width="250"
+        src={URL.createObjectURL(video)}>
+
+      </video>} */}
+
       <React.Fragment>
-        <CssBaseline />
-        <Route path="/" component={Nav} />
         <main>
-          <Route path="/" exact component={Upload} />
-          <Route path="/result" component={Result} />
+          <Container className={classes.cardGrid} maxWidth="md">
+            <div className={classes.root}>
+              <GridList cellHeight={180} className={classes.gridList}>
+                <GridListTile key="Subheader" cols={2} style={{ height: 'auto' }}>
+                  <ListSubheader component="div">Graphic Novel</ListSubheader>
+                </GridListTile>
+                {tileData.map((tile) => (
+                  <GridListTile key={tile.img}>
+                    <img src={tile.img} alt={tile.title} />
+                    <GridListTileBar
+                      subtitle={tile.text}
+                    />
+                  </GridListTile>
+                ))}
+              </GridList>
+            </div>
+          </Container>
         </main>
-        <Route path="/" component={Footer} />
       </React.Fragment>
-      </Router>
     </div>
   )
     
 }
-
-{/* <Router>
-  <Route path="/result" component={Result} />
-  <Link to="/result">
-    <Button variant="contained" color="primary" style={{justifyContent: 'center'}}>
-      Move
-    </Button>
-  </Link>    
-</Router> */}
