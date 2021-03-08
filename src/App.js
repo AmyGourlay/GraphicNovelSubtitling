@@ -34,8 +34,23 @@ import Footer from './Footer';
 import {BrowserRouter as Router, Switch, Route} from 'react-router-dom';
 import {Link} from 'react-router-dom';
 
-import {createFFmpeg, fetchFile} from '@ffmpeg/ffmpeg';
-const ffmpeg = createFFmpeg({log: true});
+// import {createFFmpeg, fetchFile} from '@ffmpeg/ffmpeg';
+// const ffmpeg = createFFmpeg({log: true});
+
+// const msgArr = [];
+
+// //ffmpeg.setLogging(true);
+// ffmpeg.setLogger(({ message }) => {
+//     console.log("MESSAGE:::" + message);
+//     msgArr.push(message);
+//     /*
+//      * type can be one of following:
+//      *
+//      * info: internal workflow debug messages
+//      * fferr: ffmpeg native stderr output
+//      * ffout: ffmpeg native stdout output
+//      */
+//   });
 
 const useStyles = makeStyles((theme) => ({
   icon: {

@@ -30,9 +30,54 @@ import parseSRT from 'parse-srt';
 import Result from './Result';
 import {BrowserRouter as Router, Switch, Route} from 'react-router-dom';
 import {Link} from 'react-router-dom';
+import {useHistory} from 'react-router-dom';
+import {Redirect} from 'react-router-dom';
 
 import {createFFmpeg, fetchFile} from '@ffmpeg/ffmpeg';
 const ffmpeg = createFFmpeg({log: true});
+
+//const ffLog = require("../node_modules/@ffmpeg/ffmpeg/src/utils/log.js");
+
+const msgArr = [];
+
+//ffmpeg.setLogging(true);
+ffmpeg.setLogger(({ type, message }) => {
+    console.log("MESSAGE:::" + message);
+    //if(type == 'fferr')
+    if(message.includes("frame="))
+    {
+        var frame = message.substring(
+            message.lastIndexOf("frame"), 
+            message.lastIndexOf("fps")
+        );
+        var timestamp = message.substring(
+            message.lastIndexOf("time"), 
+            message.lastIndexOf("bitrate")
+        );
+        msgArr.push(frame);
+        msgArr.push(timestamp);
+    }
+  });
+
+
+// let logging = false;
+// let myLogger = () => {};
+
+// const setLogging = (_logging) => {
+//   logging = _logging;
+// };
+
+// const setCustomLogger = (logger) => {
+//   myLogger = logger;
+// };
+
+// const log = (type, message) => {
+//   myLogger({ type, message });
+//   if (logging) {
+//     console.log(`MyLogger: [${type}] ${message}`);
+//   }
+// };
+
 
 const useStyles = makeStyles((theme) => ({
   icon: {
@@ -85,17 +130,26 @@ const useStyles = makeStyles((theme) => ({
   button: {
     paddingTop: '3%',
     paddingBottom: '3%'
+  },
+  reultLink: {
+      display: 'none',
+      paddingTop: '3%',
   }
 }));
 
 export default function Album() {
   const classes = useStyles();
+  
+  const history = useHistory();
+  //const tileData = [];
 
   const[ready, setReady] = useState(false);
   const[video, setVideo] = useState();
   const[subtitle, setSubtitle] = useState([]);
-  const [keyframe, setKeyframe] = useState([]);
+  const[keyframe, setKeyframe] = useState([]);
+  //const[tileData, setTileData] = useState([]);
   const[metadata, setMetadata] = useState();
+  const[send, setSend] = useState(false);
 
   const cards = [
 
@@ -113,65 +167,6 @@ export default function Album() {
     },
   
   ];
-
-  const load = async() => {
-    await ffmpeg.load();
-    setReady(true);
-  }
-
-  useEffect(() => {
-    load();
-  }, [])
-
-
-  const convertToKeyframe = async () => {
-    // Write the video file to memory 
-    ffmpeg.FS('writeFile', 'video.mp4', await fetchFile(video));
-
-    // Read in the subtitle file to memory 
-    const reader = new FileReader()
-    reader.onload = async (e) => { 
-      const text = (e.target.result)
-      console.log(text)
-      var srt = parseSRT(text)
-      console.log(srt)
-      console.log(srt.text)
-      setSubtitle([srt[0].text, srt[1].text, srt[2].text, srt[3].text, srt[4].text, srt[5].text, srt[6].text, srt[7].text])
-      console.log(subtitle)
-    };
-    reader.readAsText(subtitle)
-
-    //await ffmpeg.run('-i', 'test.mp4', '-i', 'infile.srt', '-c', 'copy', '-c:s', 'mov_text', 'outfile.mp4');
-    // Run the FFMpeg command
-    //await ffmpeg.run('-i', 'test.mp4', '-t', '2.5', '-ss', '2.0', '-f', 'keyframe', 'out.keyframe');
-    //code taken from: https://superuser.com/questions/669716/how-to-extract-all-key-frames-from-a-video-clip
-    await ffmpeg.run('-skip_frame', 'nokey', '-i', 'video.mp4', '-vsync', '0', '-r', '30', '-f', 'image2', 'thumbnails-%02d.jpeg');
-    //await ffmpeg.run('-skip_frame', 'nokey', '-i', 'video.mp4', '-vsync', '0', '-r', '30', '-f', 'image2', '-strftime', '1', '%Y-%m-%d_%H-%M-%S.jpg');
-    //await ffmpeg.run('-i', 'video.mp4', '-f', 'ffmetadata', 'in.txt');
-    //await ffprobe.run('-loglevel', 'error', '-skip_frame', 'nokey', '-select_streams', 'v:0', '-show_entries', 'frame=pkt_pts_time', '-of', 'csv=print_section=0', 'input.mp4')
-
-    //const meta = [ffmpeg.FS('readFile', 'in.txt')];
-    //console.log(meta);
-
-    // const reader2 = new FileReader()
-    // reader2.onload = async (e) => { 
-    //   const text = (e.target.result)
-    //   console.log(text)
-    //  };
-    // reader2.readAsText('in.txt')
-
-    // Read the result
-    console.log();
-    const data = [ffmpeg.FS('readFile', 'thumbnails-01.jpeg'), ffmpeg.FS('readFile', 'thumbnails-02.jpeg'), ffmpeg.FS('readFile', 'thumbnails-03.jpeg'), ffmpeg.FS('readFile', 'thumbnails-04.jpeg'), ffmpeg.FS('readFile', 'thumbnails-05.jpeg'), ffmpeg.FS('readFile', 'thumbnails-06.jpeg'), ffmpeg.FS('readFile', 'thumbnails-07.jpeg'), ffmpeg.FS('readFile', 'thumbnails-08.jpeg'), ffmpeg.FS('readFile', 'thumbnails-09.jpeg'),];
-    console.log(data[2].buffer);
-    const url = [URL.createObjectURL(new Blob([data[0].buffer], { type: 'image' })), URL.createObjectURL(new Blob([data[1].buffer], { type: 'image' })), URL.createObjectURL(new Blob([data[2].buffer], { type: 'image' })), URL.createObjectURL(new Blob([data[3].buffer], { type: 'image' })), URL.createObjectURL(new Blob([data[4].buffer], { type: 'image' })), URL.createObjectURL(new Blob([data[5].buffer], { type: 'image' })), URL.createObjectURL(new Blob([data[6].buffer], { type: 'image' })), URL.createObjectURL(new Blob([data[7].buffer], { type: 'image' })), URL.createObjectURL(new Blob([data[8].buffer], { type: 'image' })),];
-    console.log(url[2]);  
-
-    // Create a URL
-    setKeyframe([url[0], url[1], url[2], url[3], url[4], url[5], url[6], url[7], url[8]]);
-    
-    
-  }
 
   const tileData = [
 
@@ -209,6 +204,134 @@ export default function Album() {
     },
   
   ];
+
+    
+
+  const load = async() => {
+    await ffmpeg.load();
+    setReady(true);
+  }
+
+  useEffect(() => {
+    load();
+  }, [])
+
+
+  const convertToKeyframe = async () => {
+    // Write the video file to memory 
+    ffmpeg.FS('writeFile', 'video.mp4', await fetchFile(video));
+
+    // Read in the subtitle file to memory 
+    const reader = new FileReader()
+    reader.onload = async (e) => { 
+      const text = (e.target.result)
+      console.log(text)
+      var srt = parseSRT(text)
+      console.log(srt)
+      console.log(srt.text)
+      var arr = [];
+      for (var i=0; i<srt.length; i++) {
+        //setSubtitle([srt[0].text, srt[1].text, srt[2].text, srt[3].text, srt[4].text, srt[5].text, srt[6].text, srt[7].text])
+        arr.push(srt[i].text)
+      } 
+      setSubtitle(arr);
+      console.log(subtitle[4])
+    };
+    reader.readAsText(subtitle)
+
+    //await ffmpeg.run('-i', 'test.mp4', '-i', 'infile.srt', '-c', 'copy', '-c:s', 'mov_text', 'outfile.mp4');
+    // Run the FFMpeg command
+    //await ffmpeg.run('-i', 'test.mp4', '-t', '2.5', '-ss', '2.0', '-f', 'keyframe', 'out.keyframe');
+    //code taken from: https://superuser.com/questions/669716/how-to-extract-all-key-frames-from-a-video-clip
+    await ffmpeg.run('-skip_frame', 'nokey', '-i', 'video.mp4', '-vsync', '0', '-r', '30', '-f', 'image2', 'thumbnails-%02d.jpeg');
+    //await ffmpeg.run('-i', 'video.mp4', '-vf', 'select=eq(pict_type\,I)', '-vsync', 'vfr', 'frame-%02d.png');
+    //await ffmpeg.run('-i', 'video.mp4', 'out.txt', '-loglevel', 'debug', '-v', 'verbose');
+    //await ffmpeg.run('-skip_frame', 'nokey', '-i', 'video.mp4', '-vsync', '0', '-r', '30', '-f', 'image2', '-strftime', '1', '%Y-%m-%d_%H-%M-%S.jpg');
+    //await ffmpeg.run('-i', 'video.mp4', '-f', 'ffmetadata', 'in.txt');
+    //await ffprobe.run('-loglevel', 'error', '-skip_frame', 'nokey', '-select_streams', 'v:0', '-show_entries', 'frame=pkt_pts_time', '-of', 'csv=print_section=0', 'input.mp4')
+    //await ffmpeg.run('-i', 'video.mp4', '-vf', 'select=key', '-an', '-vsync', '0', 'keyframes%03d.jpeg', '-loglevel', 'debug', '2>&1', '|', 'findstr', 'select:1', '>', 'keyframes.txt');
+
+
+    //const meta = [ffmpeg.FS('readFile', 'in.txt')];
+    //console.log(meta);
+
+    // const reader2 = new FileReader()
+    // reader2.onload = async (e) => { 
+    //   const text = (e.target.result)
+    //   console.log(text)
+    //  };
+    // reader2.readAsText('in.txt')
+
+    // Read the result
+    console.log();
+    const data = [ffmpeg.FS('readFile', 'thumbnails-01.jpeg'), ffmpeg.FS('readFile', 'thumbnails-02.jpeg'), ffmpeg.FS('readFile', 'thumbnails-03.jpeg'), ffmpeg.FS('readFile', 'thumbnails-04.jpeg'), ffmpeg.FS('readFile', 'thumbnails-05.jpeg'), ffmpeg.FS('readFile', 'thumbnails-06.jpeg'), ffmpeg.FS('readFile', 'thumbnails-07.jpeg'), ffmpeg.FS('readFile', 'thumbnails-08.jpeg'), ffmpeg.FS('readFile', 'thumbnails-09.jpeg'),];
+    console.log("DATA::" + data[2].buffer);
+    //const arr2 = [];
+    const url = [];
+    for (var i=0; i<data.length; i++) {
+        //const url = [URL.createObjectURL(new Blob([data[0].buffer], { type: 'image' })), URL.createObjectURL(new Blob([data[1].buffer], { type: 'image' })), URL.createObjectURL(new Blob([data[2].buffer], { type: 'image' })), URL.createObjectURL(new Blob([data[3].buffer], { type: 'image' })), URL.createObjectURL(new Blob([data[4].buffer], { type: 'image' })), URL.createObjectURL(new Blob([data[5].buffer], { type: 'image' })), URL.createObjectURL(new Blob([data[6].buffer], { type: 'image' })), URL.createObjectURL(new Blob([data[7].buffer], { type: 'image' })), URL.createObjectURL(new Blob([data[8].buffer], { type: 'image' })),];
+        //arr.push(data[i].buffer)
+        url.push(URL.createObjectURL(new Blob([data[i].buffer])))
+    }
+    //const url = URL.createObjectURL(new Blob([arr]));
+    console.log("URL::" + url[2]);  
+    const arr2 = [];
+    // Create a URL
+    for (var i=0; i<data.length; i++) {
+        //setKeyframe([url[0], url[1], url[2], url[3], url[4], url[5], url[6], url[7], url[8]]);
+        arr2.push(url[i])
+    }
+    setKeyframe(arr2);
+    console.log("SUB11:" + subtitle[5])
+
+    // <Link to={{ pathname:"/result", state: tileData}}>
+    //     Link
+    // </Link>
+
+    // var arr3 = [];
+    // for (var i=0; i<keyframe.length; i++) {
+    //     arr3.push([
+    //     {
+    //     img: keyframe[i],
+    //     text: subtitle[i]
+    //     },
+    // ]);
+    // }
+    // setTileData(arr3)
+    
+    //console.log("HERE!!!!!!!!!!!" + ffLog.log());
+
+    console.log("WOOOOOO" + msgArr);
+
+
+    setSend(true);
+       
+  }
+
+   
+
+  const redirect = () => {
+    
+    console.log("SUB:" + subtitle[5]);
+    console.log("DATA:::" + tileData);
+
+    //history.push({ pathname:"/result", state: tileData});
+
+    return <Redirect 
+        to={{
+            pathname: "/result",
+            state: tileData
+        }}
+    />
+  }
+
+  const call = async() => {
+      await convertToKeyframe();
+      //redirect();
+      document.getElementById('resultLink').style.display = 'block';
+  }
+
+  
 
   return ready ? (
 
@@ -248,11 +371,13 @@ export default function Album() {
             </Grid>
             <div className={classes.button}>
               <Box textAlign='center'>
-              <Button variant="contained" color="primary" style={{justifyContent: 'center'}} onClick={convertToKeyframe}>
+              <Button variant="contained" color="primary" style={{justifyContent: 'center'}} onClick={call} >
                     Convert
                 </Button>
-                <Link to={{ pathname:"/result", state: tileData}}>
-                    Link
+                <Link id="resultLink" className={classes.reultLink} to={{ pathname:"/result", state: tileData}}>
+                    <Button variant="contained" color="primary" style={{justifyContent: 'center'}}>
+                        Ready
+                    </Button>
                 </Link>
               </Box>
             </div>

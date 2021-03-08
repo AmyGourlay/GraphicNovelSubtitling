@@ -30,9 +30,28 @@ import parseSRT from 'parse-srt';
 import Result from './Result';
 import {BrowserRouter as Router, Switch, Route} from 'react-router-dom';
 import {Link} from 'react-router-dom';
+import {useLocation} from 'react-router-dom';
+import leftArrow from './assets/arrow-80-256.png';
+import rightArrow from './assets/arrow-57-256.png';
+
 
 import {createFFmpeg, fetchFile} from '@ffmpeg/ffmpeg';
 const ffmpeg = createFFmpeg({log: true});
+
+// const msgArr = [];
+
+// //ffmpeg.setLogging(true);
+// ffmpeg.setLogger(({ message }) => {
+//     console.log("MESSAGE:::" + message);
+//     msgArr.push(message);
+//     /*
+//      * type can be one of following:
+//      *
+//      * info: internal workflow debug messages
+//      * fferr: ffmpeg native stderr output
+//      * ffout: ffmpeg native stdout output
+//      */
+//   });
 
 const useStyles = makeStyles((theme) => ({
   icon: {
@@ -85,15 +104,22 @@ const useStyles = makeStyles((theme) => ({
   button: {
     paddingTop: '3%',
     paddingBottom: '3%'
+  },
+  arrow: {
+    paddingTop: '20%',
+    paddingBottom: '20%',
+    outline: 'none'
   }
 }));
 
 
-export default function Album(props) {
+export default function Album() {
   const classes = useStyles();
-  console.log("MATCH1:" + props);
+  const location = useLocation();
+  
+  console.log("MATCH1:");
 
-  const tileData = props.location.state;
+  const tileData = location.state;
 
   console.log("TILEDATA2:" + tileData);
 
@@ -109,11 +135,13 @@ export default function Album(props) {
 
       <React.Fragment>
         <main>
-          <Container className={classes.cardGrid} maxWidth="md">
+          <Container className={classes.cardGrid}>
+              
             <div className={classes.root}>
+              <input type="image" id="image" className={classes.arrow} alt="Login" src={leftArrow}></input>
               <GridList cellHeight={180} className={classes.gridList}>
                 <GridListTile key="Subheader" cols={2} style={{ height: 'auto' }}>
-                  <ListSubheader component="div">Graphic Novel</ListSubheader>
+                  <ListSubheader component="div">Your Graphic Novel</ListSubheader>
                 </GridListTile>
                 {tileData.map((tile) => (
                   <GridListTile key={tile.img}>
@@ -124,7 +152,23 @@ export default function Album(props) {
                   </GridListTile>
                 ))}
               </GridList>
+              <input type="image" id="image" className={classes.arrow} alt="Login" src={rightArrow}></input>
+              {/* <GridList cellHeight={180} className={classes.gridList}>
+                <GridListTile key="Subheader" cols={2} style={{ height: 'auto' }}>
+                  <ListSubheader component="div">Your Graphic Novel</ListSubheader>
+                </GridListTile>
+                {tileData.map((tile) => (
+                  <GridListTile key={tile.img}>
+                    <img src={tile.img} alt={tile.title} />
+                    <GridListTileBar
+                      subtitle={tile.text}
+                    />
+                  </GridListTile>
+                ))}
+              </GridList> */}
             </div>
+            
+            <ListSubheader>Page 1</ListSubheader>
           </Container>
         </main>
       </React.Fragment>
