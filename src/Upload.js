@@ -32,6 +32,7 @@ import {BrowserRouter as Router, Switch, Route} from 'react-router-dom';
 import {Link} from 'react-router-dom';
 import {useHistory} from 'react-router-dom';
 import {Redirect} from 'react-router-dom';
+import LinearProgress from '@material-ui/core/LinearProgress';
 
 import {createFFmpeg, fetchFile} from '@ffmpeg/ffmpeg';
 const ffmpeg = createFFmpeg({log: true});
@@ -144,9 +145,11 @@ export default function Album() {
   //const tileData = [];
 
   const[ready, setReady] = useState(false);
+  const[progress, setProgress] = useState(0);
   const[video, setVideo] = useState();
   const[subtitle, setSubtitle] = useState([]);
   const[keyframe, setKeyframe] = useState([]);
+  const[timestamp, setTimestamp] = useState([]);
   //const[tileData, setTileData] = useState([]);
   const[metadata, setMetadata] = useState();
   const[send, setSend] = useState(false);
@@ -169,41 +172,41 @@ export default function Album() {
   ];
 
   const tileData = [
-
     {
       img: keyframe[0],
       text: subtitle[0]
     },
-    {
-      img: keyframe[1],
-      text: subtitle[1]
-    },
-    {
-      img: keyframe[2],
-      text: subtitle[2]
-    },
-    {
-      img: keyframe[3],
-      text: subtitle[3]
-    },
-    {
-      img: keyframe[4],
-      text: subtitle[4]
-    },
-    {
-      img: keyframe[5],
-      text: subtitle[5]
-    },
-    {
-      img: keyframe[6],
-      text: subtitle[6]
-    },
-    {
-      img: keyframe[7],
-      text: subtitle[7]
-    },
+  ]
+  //   {
+  //     img: keyframe[1],
+  //     text: subtitle[1]
+  //   },
+  //   {
+  //     img: keyframe[2],
+  //     text: subtitle[2]
+  //   },
+  //   {
+  //     img: keyframe[3],
+  //     text: subtitle[3]
+  //   },
+  //   {
+  //     img: keyframe[4],
+  //     text: subtitle[4]
+  //   },
+  //   {
+  //     img: keyframe[5],
+  //     text: subtitle[5]
+  //   },
+  //   {
+  //     img: keyframe[6],
+  //     text: subtitle[6]
+  //   },
+  //   {
+  //     img: keyframe[7],
+  //     text: subtitle[7]
+  //   },
   
-  ];
+  // ];
 
     
 
@@ -214,6 +217,17 @@ export default function Album() {
 
   useEffect(() => {
     load();
+    const timer = setInterval(() => {
+      setProgress(oldProgress => {
+        if (oldProgress === 100) {
+          clearInterval(timer);
+        }
+        return Math.min(oldProgress + 0.5, 100);
+      });
+    }, 500);
+  return () => {
+      clearInterval(timer);
+    };
   }, [])
 
 
@@ -230,12 +244,17 @@ export default function Album() {
       console.log(srt)
       console.log(srt.text)
       var arr = [];
+      var arr4 = [];
       for (var i=0; i<srt.length; i++) {
         //setSubtitle([srt[0].text, srt[1].text, srt[2].text, srt[3].text, srt[4].text, srt[5].text, srt[6].text, srt[7].text])
         arr.push(srt[i].text)
+        arr4.push(srt[i].start)
+        console.log(arr4)
       } 
       setSubtitle(arr);
+      setTimestamp(arr4);
       console.log(subtitle[4])
+      console.log(timestamp[4])
     };
     reader.readAsText(subtitle)
 
@@ -243,8 +262,13 @@ export default function Album() {
     // Run the FFMpeg command
     //await ffmpeg.run('-i', 'test.mp4', '-t', '2.5', '-ss', '2.0', '-f', 'keyframe', 'out.keyframe');
     //code taken from: https://superuser.com/questions/669716/how-to-extract-all-key-frames-from-a-video-clip
-    await ffmpeg.run('-skip_frame', 'nokey', '-i', 'video.mp4', '-vsync', '0', '-r', '30', '-f', 'image2', 'thumbnails-%02d.jpeg');
-    //await ffmpeg.run('-i', 'video.mp4', '-vf', 'select=eq(pict_type\,I)', '-vsync', 'vfr', 'frame-%02d.png');
+
+    await ffmpeg.run('-i', 'video.mp4', '-force_key_frames', 'expr:gte(t,n_forced*2)', '-preset', 'ultrafast', 'video1.mp4');
+
+    await ffmpeg.run('-skip_frame', 'nokey', '-i', 'video1.mp4', '-vsync', '0', '-r', '30', '-f', 'image2', 'thumbnails-%02d.jpeg');
+    
+    //await ffmpeg.run('-skip_frame', 'nokey', '-i', 'video.mp4', '-vsync', '1', '-r', '30',);
+    //await ffmpeg.run('-i', 'video.mp4', '-vf', 'select=between(1,10,20)', '-vsync', 'vfr', '-f', 'image2', 'thumbnails-%02d.jpeg');
     //await ffmpeg.run('-i', 'video.mp4', 'out.txt', '-loglevel', 'debug', '-v', 'verbose');
     //await ffmpeg.run('-skip_frame', 'nokey', '-i', 'video.mp4', '-vsync', '0', '-r', '30', '-f', 'image2', '-strftime', '1', '%Y-%m-%d_%H-%M-%S.jpg');
     //await ffmpeg.run('-i', 'video.mp4', '-f', 'ffmetadata', 'in.txt');
@@ -263,8 +287,16 @@ export default function Album() {
     // reader2.readAsText('in.txt')
 
     // Read the result
-    console.log();
-    const data = [ffmpeg.FS('readFile', 'thumbnails-01.jpeg'), ffmpeg.FS('readFile', 'thumbnails-02.jpeg'), ffmpeg.FS('readFile', 'thumbnails-03.jpeg'), ffmpeg.FS('readFile', 'thumbnails-04.jpeg'), ffmpeg.FS('readFile', 'thumbnails-05.jpeg'), ffmpeg.FS('readFile', 'thumbnails-06.jpeg'), ffmpeg.FS('readFile', 'thumbnails-07.jpeg'), ffmpeg.FS('readFile', 'thumbnails-08.jpeg'), ffmpeg.FS('readFile', 'thumbnails-09.jpeg'),];
+    console.log("THUMBNAIL::" + 'thumbnails-0' + i + '.jpeg');
+    const data = [];
+    for (var i=1; i<9; i++) {
+        //const data = [ffmpeg.FS('readFile', 'thumbnails-01.jpeg'), ffmpeg.FS('readFile', 'thumbnails-02.jpeg'), ffmpeg.FS('readFile', 'thumbnails-03.jpeg'), ffmpeg.FS('readFile', 'thumbnails-04.jpeg'), ffmpeg.FS('readFile', 'thumbnails-05.jpeg'), ffmpeg.FS('readFile', 'thumbnails-06.jpeg'), ffmpeg.FS('readFile', 'thumbnails-07.jpeg'), ffmpeg.FS('readFile', 'thumbnails-08.jpeg'), ffmpeg.FS('readFile', 'thumbnails-09.jpeg')];
+        data.push(ffmpeg.FS('readFile', 'thumbnails-0' + i + '.jpeg'));
+    }
+    for (var i=10; i<17; i++) {
+      //const data = [ffmpeg.FS('readFile', 'thumbnails-01.jpeg'), ffmpeg.FS('readFile', 'thumbnails-02.jpeg'), ffmpeg.FS('readFile', 'thumbnails-03.jpeg'), ffmpeg.FS('readFile', 'thumbnails-04.jpeg'), ffmpeg.FS('readFile', 'thumbnails-05.jpeg'), ffmpeg.FS('readFile', 'thumbnails-06.jpeg'), ffmpeg.FS('readFile', 'thumbnails-07.jpeg'), ffmpeg.FS('readFile', 'thumbnails-08.jpeg'), ffmpeg.FS('readFile', 'thumbnails-09.jpeg')];
+      data.push(ffmpeg.FS('readFile', 'thumbnails-' + i + '.jpeg'));
+  }
     console.log("DATA::" + data[2].buffer);
     //const arr2 = [];
     const url = [];
@@ -288,18 +320,18 @@ export default function Album() {
     //     Link
     // </Link>
 
-    // var arr3 = [];
-    // for (var i=0; i<keyframe.length; i++) {
-    //     arr3.push([
-    //     {
-    //     img: keyframe[i],
-    //     text: subtitle[i]
-    //     },
-    // ]);
-    // }
-    // setTileData(arr3)
+    //var arr3 = [];
+    //for (var i=1; i<data.length; i++) {
+      // let data3 = [{
+      //   img: keyframe[i],
+      //   text: subtitle[i]
+      // }]
+      //console.log("In here ya");
+      //tileData.push({img: keyframe[i], text: subtitle[i]});
+    //}
+    //setTileData(arr3);
     
-    //console.log("HERE!!!!!!!!!!!" + ffLog.log());
+    //console.log("HERE!!!!!!!!!!!" + arr3);
 
     console.log("WOOOOOO" + msgArr);
 
@@ -374,7 +406,8 @@ export default function Album() {
               <Button variant="contained" color="primary" style={{justifyContent: 'center'}} onClick={call} >
                     Convert
                 </Button>
-                <Link id="resultLink" className={classes.reultLink} to={{ pathname:"/result", state: tileData}}>
+                <LinearProgress variant="determinate" value={progress} />
+                <Link id="resultLink" className={classes.reultLink} to={{ pathname:"/result", state: {keyframe: keyframe, subtitle: subtitle, timestamp: timestamp}}}>
                     <Button variant="contained" color="primary" style={{justifyContent: 'center'}}>
                         Ready
                     </Button>

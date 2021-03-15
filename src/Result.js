@@ -33,10 +33,17 @@ import {Link} from 'react-router-dom';
 import {useLocation} from 'react-router-dom';
 import leftArrow from './assets/arrow-80-256.png';
 import rightArrow from './assets/arrow-57-256.png';
+import whiteBox from './assets/box.png';
+import {exportComponentAsJPEG, exportComponentAsPDF} from 'react-component-export-image';
+import {useRef} from 'react';
+
+
 
 
 import {createFFmpeg, fetchFile} from '@ffmpeg/ffmpeg';
 const ffmpeg = createFFmpeg({log: true});
+
+var imgUrl = {leftArrow};
 
 // const msgArr = [];
 
@@ -92,7 +99,7 @@ const useStyles = makeStyles((theme) => ({
     flexWrap: 'wrap',
     justifyContent: 'space-around',
     overflow: 'hidden',
-    backgroundColor: theme.palette.background.paper,
+    // backgroundColor: theme.palette.background.paper,
   },
   gridList: {
     width: 600,
@@ -106,22 +113,100 @@ const useStyles = makeStyles((theme) => ({
     paddingBottom: '3%'
   },
   arrow: {
+    blockSize: '1%',
     paddingTop: '20%',
     paddingBottom: '20%',
     outline: 'none'
+  },
+  heading: {
+    WebkitTextFillColor: 'black'
   }
 }));
 
 
 export default function Album() {
+  
+  const componentRef = useRef();
+
   const classes = useStyles();
   const location = useLocation();
+
+  const[pageReady, setPageReady] = useState(false);
   
-  console.log("MATCH1:");
 
-  const tileData = location.state;
+  //const tileData = location.state;
 
-  console.log("TILEDATA2:" + tileData);
+  const {keyframe, subtitle, timestamp} = location.state;
+
+  //const subtitle = location.state;
+
+  console.log("YO" + keyframe)
+  console.log("YOYO" + subtitle)
+  console.log("YOYOYO" + timestamp)
+
+  //console.log("TILEDATA2:" + tileData);
+
+  //console.log("MATCH1:" + tileData.map((tile) => (tile.img)));
+
+  const tileData = [];
+
+  for (var i=0; i<12; i++)
+  {
+    tileData.push(undefined)
+  }
+
+  for (var i=0; i<16; i++)
+  {
+    //tileData.splice(i, 0, undefined)
+    for (var j=0; j<16; j++) {
+      if ((timestamp[i] >= j*2) && (timestamp[i] < (j+1)*2)) {
+        tileData.splice(j, 0, subtitle[i])
+      }
+      
+    }
+  }
+
+  const page1keyframes = []
+  const page2keyframes = []
+  
+
+  for (var i=0; i<keyframe.length; i++)
+  {
+    if (i<8) {
+      page1keyframes.push(keyframe[i]);
+    }
+    else {
+      page2keyframes.push(keyframe[i]);
+    }
+  }
+
+  let page = [];
+  //console.log(page);
+  //let page = [];
+
+  if (pageReady == false) {
+    page = page1keyframes.slice();
+  }
+  else if(pageReady == true) {
+    page = page2keyframes.slice();
+  }
+
+  const changePage = () => {
+    console.log("HERE");
+    //page = page2keyframes.slice();
+    console.log(page);
+    //window.location.reload()
+    if (pageReady == false)
+    {
+      setPageReady(true);
+    }
+    else {
+      setPageReady(false);
+    }
+  }
+
+  console.log("WE HERE NOW::" + tileData)
+  console.log(tileData)
 
   return (
 
@@ -135,24 +220,33 @@ export default function Album() {
 
       <React.Fragment>
         <main>
-          <Container className={classes.cardGrid}>
-              
-            <div className={classes.root}>
+          <Container className={classes.cardGrid} >
+            <div className={classes.root} ref={componentRef}>
               <input type="image" id="image" className={classes.arrow} alt="Login" src={leftArrow}></input>
               <GridList cellHeight={180} className={classes.gridList}>
                 <GridListTile key="Subheader" cols={2} style={{ height: 'auto' }}>
-                  <ListSubheader component="div">Your Graphic Novel</ListSubheader>
+                  <ListSubheader className={classes.heading} style={{textAlign: "center"}}>Your Graphic Novel</ListSubheader>
                 </GridListTile>
-                {tileData.map((tile) => (
+                {/* {tileData.map((tile) => (
                   <GridListTile key={tile.img}>
                     <img src={tile.img} alt={tile.title} />
                     <GridListTileBar
                       subtitle={tile.text}
                     />
                   </GridListTile>
-                ))}
+                ))} */}
+                {page.map((page) => ( 
+                  <GridListTile key={page}>
+                    <img src={page} /> 
+                    {/* {subtitle.map((subtitle) => ( */}
+                    <GridListTileBar key={subtitle}
+                      subtitle={subtitle}
+                    />
+                      {/* ))} */}
+                  </GridListTile>
+                  ))}
               </GridList>
-              <input type="image" id="image" className={classes.arrow} alt="Login" src={rightArrow}></input>
+              <input type="image" id="image" className={classes.arrow} alt="Login" src={rightArrow} onClick={changePage}></input>
               {/* <GridList cellHeight={180} className={classes.gridList}>
                 <GridListTile key="Subheader" cols={2} style={{ height: 'auto' }}>
                   <ListSubheader component="div">Your Graphic Novel</ListSubheader>
@@ -168,8 +262,12 @@ export default function Album() {
               </GridList> */}
             </div>
             
-            <ListSubheader>Page 1</ListSubheader>
+            <ListSubheader style={{textAlign: "center"}} className={classes.heading}>Page 1</ListSubheader>
+            <Button variant="contained" color="primary" style={{justifyContent: "right"}} onClick={() => exportComponentAsJPEG(componentRef)} >
+              Export As JPEG
+            </Button>
           </Container>
+       
         </main>
       </React.Fragment>
     </div>
