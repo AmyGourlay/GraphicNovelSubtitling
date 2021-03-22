@@ -6,10 +6,12 @@ import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import CardMedia from '@material-ui/core/CardMedia';
+import CardActionArea from "@material-ui/core/CardActionArea";
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Grid from '@material-ui/core/Grid';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
+import { withStyles } from "@material-ui/core/styles";
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 import MLink from '@material-ui/core/Link';
@@ -36,29 +38,12 @@ import rightArrow from './assets/arrow-57-256.png';
 import whiteBox from './assets/box.png';
 import {exportComponentAsJPEG, exportComponentAsPDF} from 'react-component-export-image';
 import {useRef} from 'react';
-
-
-
+import Paper from '@material-ui/core/Paper';
 
 import {createFFmpeg, fetchFile} from '@ffmpeg/ffmpeg';
 const ffmpeg = createFFmpeg({log: true});
 
 var imgUrl = {leftArrow};
-
-// const msgArr = [];
-
-// //ffmpeg.setLogging(true);
-// ffmpeg.setLogger(({ message }) => {
-//     console.log("MESSAGE:::" + message);
-//     msgArr.push(message);
-//     /*
-//      * type can be one of following:
-//      *
-//      * info: internal workflow debug messages
-//      * fferr: ffmpeg native stderr output
-//      * ffout: ffmpeg native stdout output
-//      */
-//   });
 
 const useStyles = makeStyles((theme) => ({
   icon: {
@@ -99,7 +84,10 @@ const useStyles = makeStyles((theme) => ({
     flexWrap: 'wrap',
     justifyContent: 'space-around',
     overflow: 'hidden',
-    // backgroundColor: theme.palette.background.paper,
+    width: '100%',
+  },
+  comic: {
+    width: 700
   },
   gridList: {
     width: 600,
@@ -110,18 +98,48 @@ const useStyles = makeStyles((theme) => ({
   },
   button: {
     paddingTop: '3%',
-    paddingBottom: '3%'
+    paddingBottom: '3%',
+    padding: '1%'
   },
   arrow: {
     blockSize: '1%',
     paddingTop: '20%',
     paddingBottom: '20%',
-    outline: 'none'
+    outline: 'none',
   },
   heading: {
     WebkitTextFillColor: 'black'
-  }
+  },
+  paper: {
+    padding: theme.spacing(2),
+    textAlign: 'center',
+    color: theme.palette.text.secondary,
+  },
+  img: {
+    // margin: 'auto',
+    // display: 'block',
+    // maxWidth: '100%',
+    // maxHeight: '100%',
+    // objectFit: 'cover'
+  },
+  title: {
+    color: 'white',
+    fontSize: 12,
+    whiteSpace: 'normal !important',
+    overflow: 'visible'
+  },
+  titleBar: {
+    background:
+      'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 70%, rgba(0,0,0,0) 100%)',
+    whiteSpace: 'normal !important'
+  },
 }));
+
+const WhiteTextTypography = withStyles({
+  root: {
+    color: "#FFFFFF",
+  }
+})(Typography);
 
 
 export default function Album() {
@@ -131,78 +149,164 @@ export default function Album() {
   const classes = useStyles();
   const location = useLocation();
 
-  const[pageReady, setPageReady] = useState(false);
-  
-
-  //const tileData = location.state;
+  const[pageReady, setPageReady] = useState(0);
+  const[newLayout, setnewLayout] = useState(0);
+  const[newPlacement, setnewPlacement] = useState(0);
 
   const {keyframe, subtitle, timestamp} = location.state;
-
-  //const subtitle = location.state;
 
   console.log("YO" + keyframe)
   console.log("YOYO" + subtitle)
   console.log("YOYOYO" + timestamp)
 
-  //console.log("TILEDATA2:" + tileData);
-
-  //console.log("MATCH1:" + tileData.map((tile) => (tile.img)));
-
   const tileData = [];
 
-  for (var i=0; i<12; i++)
+  console.log("LENGTH: " + keyframe.length)
+  console.log("LENGTH: " + timestamp.length)
+
+  for (var i=0; i<(keyframe.length+1); i++)
   {
     tileData.push(undefined)
+    console.log("IN ONE")
   }
 
-  for (var i=0; i<16; i++)
+  for (var i=0; i<timestamp.length; i++)
   {
-    //tileData.splice(i, 0, undefined)
-    for (var j=0; j<16; j++) {
+    console.log("IN THREE")
+    for (var j=0; j<keyframe.length; j++) {
+      console.log("IN FOUR")
       if ((timestamp[i] >= j*2) && (timestamp[i] < (j+1)*2)) {
-        tileData.splice(j, 0, subtitle[i])
+        while (tileData[j] != undefined) {
+          j++
+        }
+        tileData.splice(j, 1, subtitle[i])
       }
       
     }
+    console.log("IN TWO")
   }
 
-  const page1keyframes = []
-  const page2keyframes = []
-  
+  console.log("TILDATA" + tileData);
 
-  for (var i=0; i<keyframe.length; i++)
-  {
-    if (i<8) {
-      page1keyframes.push(keyframe[i]);
+  const l1 = [1, 1, 1, 1, 1, 1]
+  const l1_2 = [1, 1, 1, 1, 1, 1, 1, 1]
+  const l2 = [2, 1, 1, 2]
+  const l2_2 = [2, 1, 1, 2, 1, 1]
+  const l3 = [2, 1, 1, 1, 1, 1, 2]
+  let layout = []
+  let col = 2
+  let height = 190
+  let width = 600
+
+  if (newLayout == 0) {
+    if (newPlacement == 0) {
+      layout = l1_2
+      height = 190
     }
-    else {
-      page2keyframes.push(keyframe[i]);
+    else if (newPlacement == 1)
+    {
+      layout = l1
+      height = 250
     }
+    col = 2
+    width = 600
+    console.log("SET LAYOUT1")
+  }
+  if (newLayout == 1) {
+    if (newPlacement == 0) {
+      layout = l2_2
+      height = 190
+    }
+    else if (newPlacement == 1)
+    {
+      layout = l2
+      height = 250
+    }
+    col = 2
+    width = 600
+    console.log("SET LAYOUT2")
+  }
+  if (newLayout == 2) {
+    if (newPlacement == 0) {
+      height = 250
+    }
+    else if (newPlacement == 1)
+    {
+      height = 250
+    }
+    layout = l3
+    col = 3
+    width = 700
+    console.log("SET LAYOUT3")
   }
 
   let page = [];
-  //console.log(page);
-  //let page = [];
+  const final = [];
+  const noOfPagesTemp = keyframe.length/layout.length
+  const noOfPages = Math.ceil(noOfPagesTemp)
 
-  if (pageReady == false) {
-    page = page1keyframes.slice();
-  }
-  else if(pageReady == true) {
-    page = page2keyframes.slice();
+  for (var j=(noOfPages-noOfPages); j<noOfPages; j++) {
+    for (var i=0; i<layout.length; i++) {
+      final.push({
+        img: keyframe[i+(j*layout.length)],
+        text: tileData[i+(j*layout.length)],
+        layout: layout[i]
+      })
+    console.log("LAYOUT: " * layout[i])
+    }
+    console.log("NOOFPAGES: " + noOfPages)
   }
 
-  const changePage = () => {
-    console.log("HERE");
-    //page = page2keyframes.slice();
-    console.log(page);
-    //window.location.reload()
-    if (pageReady == false)
-    {
-      setPageReady(true);
+  for (var i=(layout.length*pageReady); i<(layout.length*pageReady)+layout.length; i++) {
+    console.log("FINAL: " * final[i])
+    page.push(final[i])
+  }
+
+  const changePageForward = () => {
+    if (pageReady == (noOfPages-1)) {
+      setPageReady(pageReady);
     }
-    else {
-      setPageReady(false);
+    else{
+      setPageReady(pageReady+1);
+    } 
+  }
+  
+  const changePageBackward = () => {
+    if (pageReady == 0) {
+      setPageReady(pageReady);
     }
+    else{
+      setPageReady(pageReady-1);
+    }
+  }
+
+  const layout1 = () => {
+    setnewLayout(0)
+    console.log("LAYOUT1")
+  }
+
+  const layout2 = () => {
+    setnewLayout(1)
+    console.log("LAYOUT2")
+  }
+
+  const layout3 = () => {
+    setnewLayout(2)
+    console.log("LAYOUT3")
+  }
+
+  const placement = () => {
+    if (newPlacement == 0) {
+      setnewPlacement(1)
+      document.getElementById('grid1').style.display = 'none';
+      document.getElementById('grid2').style.removeProperty('display');
+    } 
+    else if (newPlacement == 1) {
+      setnewPlacement(0)
+      document.getElementById('grid2').style.display = 'none';
+      document.getElementById('grid1').style.removeProperty('display');
+    }
+    console.log("PLACEMENT" + newPlacement)
   }
 
   console.log("WE HERE NOW::" + tileData)
@@ -211,63 +315,70 @@ export default function Album() {
   return (
 
     <div className="App">
-      {/* { video && <video
-        controls
-        width="250"
-        src={URL.createObjectURL(video)}>
-
-      </video>} */}
-
       <React.Fragment>
         <main>
           <Container className={classes.cardGrid} >
             <div className={classes.root} ref={componentRef}>
-              <input type="image" id="image" className={classes.arrow} alt="Login" src={leftArrow}></input>
-              <GridList cellHeight={180} className={classes.gridList}>
-                <GridListTile key="Subheader" cols={2} style={{ height: 'auto' }}>
-                  <ListSubheader className={classes.heading} style={{textAlign: "center"}}>Your Graphic Novel</ListSubheader>
+              <input type="image" id="image" className={classes.arrow} alt="Login" src={leftArrow} onClick={changePageBackward}></input>
+              <GridList id="grid1" cellHeight={height} style={{width: width}} cols={col}>
+              {page.map((page) => ( 
+                <GridListTile cols={page.layout || 1}>
+                  <img src={page.img}/>
+                  <GridListTileBar  key={page.text}
+                      title={page.text}
+                      classes={{
+                        root: classes.titleBar,
+                        title: classes.title,
+                      }}
+                      style={{whiteSpace: 'normal !important', overflow: 'visible !important'}}
+                    />
+                  
                 </GridListTile>
-                {/* {tileData.map((tile) => (
-                  <GridListTile key={tile.img}>
-                    <img src={tile.img} alt={tile.title} />
-                    <GridListTileBar
-                      subtitle={tile.text}
-                    />
-                  </GridListTile>
-                ))} */}
-                {page.map((page) => ( 
-                  <GridListTile key={page}>
-                    <img src={page} /> 
-                    {/* {subtitle.map((subtitle) => ( */}
-                    <GridListTileBar key={subtitle}
-                      subtitle={subtitle}
-                    />
-                      {/* ))} */}
-                  </GridListTile>
-                  ))}
-              </GridList>
-              <input type="image" id="image" className={classes.arrow} alt="Login" src={rightArrow} onClick={changePage}></input>
-              {/* <GridList cellHeight={180} className={classes.gridList}>
-                <GridListTile key="Subheader" cols={2} style={{ height: 'auto' }}>
-                  <ListSubheader component="div">Your Graphic Novel</ListSubheader>
-                </GridListTile>
-                {tileData.map((tile) => (
-                  <GridListTile key={tile.img}>
-                    <img src={tile.img} alt={tile.title} />
-                    <GridListTileBar
-                      subtitle={tile.text}
-                    />
-                  </GridListTile>
                 ))}
-              </GridList> */}
+                </GridList>
+                <GridList id="grid2" style={{display: "none", width: width}} cellHeight={height} cols={col}>
+                {page.map((page) => ( 
+                <GridListTile key={page.text} cols={page.layout || 1}>
+                      <Card variant="outlined" style={{border: 'none', borderRadius: 0, pointerEvents: 'none'}}>
+                        <CardActionArea>
+                          <CardMedia
+                            style={{ height: 185 }}
+                            image={page.img}
+                            title={page.text}
+                          />
+                          <CardContent style={{ height: 68, backgroundColor: 'black'}}>
+                            <WhiteTextTypography
+                              variant="body2"
+                              color="#fff !important"
+                              component="p"
+                            >
+                              {page.text}
+                            </WhiteTextTypography>
+                          </CardContent>
+                        </CardActionArea>
+                      </Card>
+                    </GridListTile>
+                ))}
+              </GridList>
+              <input type="image" id="image" className={classes.arrow} alt="Login" src={rightArrow} onClick={changePageForward}></input>
             </div>
-            
-            <ListSubheader style={{textAlign: "center"}} className={classes.heading}>Page 1</ListSubheader>
-            <Button variant="contained" color="primary" style={{justifyContent: "right"}} onClick={() => exportComponentAsJPEG(componentRef)} >
+            <ListSubheader style={{textAlign: "center"}} className={classes.heading}>Page {pageReady+1} / {noOfPages}</ListSubheader>
+            <Button variant="contained" color="primary" style={{marginRight: 5}} onClick={() => exportComponentAsJPEG(componentRef)} >
               Export As JPEG
             </Button>
+            <Button variant="contained" color="primary" style={{marginRight: 5}} onClick={placement} >
+              Subtitle Placement
+            </Button>
+            <Button variant="contained" color="primary" style={{marginRight: 5}} onClick={layout1} >
+              Layout 1
+            </Button>
+            <Button variant="contained" color="primary" style={{marginRight: 5}} onClick={layout2} >
+              Layout 2
+            </Button>
+            <Button variant="contained" color="primary" style={{marginRight: 5}} onClick={layout3} >
+              Layout 3
+            </Button>
           </Container>
-       
         </main>
       </React.Fragment>
     </div>
