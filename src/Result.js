@@ -1,33 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import AppBar from '@material-ui/core/AppBar';
 import Button from '@material-ui/core/Button';
-//import CameraIcon from '@material-ui/icons/PhotoCamera';
 import Card from '@material-ui/core/Card';
-import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import CardMedia from '@material-ui/core/CardMedia';
 import CardActionArea from "@material-ui/core/CardActionArea";
-import CssBaseline from '@material-ui/core/CssBaseline';
-import Grid from '@material-ui/core/Grid';
-import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from "@material-ui/core/styles";
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
-import MLink from '@material-ui/core/Link';
-import ButtonBase from '@material-ui/core/ButtonBase';
-import backgroundImage from './assets/backgroundImage.jpg';
-import attachImage from './assets/attach-2-256.png';
-import uploadImage from './assets/upload-3-256.png';
 import GridList from '@material-ui/core/GridList';
 import GridListTile from '@material-ui/core/GridListTile';
 import GridListTileBar from '@material-ui/core/GridListTileBar';
 import ListSubheader from '@material-ui/core/ListSubheader';
 import IconButton from '@material-ui/core/IconButton';
 import Box from '@material-ui/core/Box';
-//import {parseSync} from 'subtitle';
-//import fs from 'fs';
-import SubtitleFile from './assets/DWSubtitles.srt';
+import {parseSync} from 'subtitle';
+import fs from 'fs';
 import parseSRT from 'parse-srt';
 import Result from './Result';
 import {BrowserRouter as Router, Switch, Route} from 'react-router-dom';
@@ -35,15 +23,19 @@ import {Link} from 'react-router-dom';
 import {useLocation} from 'react-router-dom';
 import leftArrow from './assets/arrow-80-256.png';
 import rightArrow from './assets/arrow-57-256.png';
-import whiteBox from './assets/box.png';
 import {exportComponentAsJPEG, exportComponentAsPDF} from 'react-component-export-image';
 import {useRef} from 'react';
-import Paper from '@material-ui/core/Paper';
-
+import { PDFDownloadLink, Document, Page, View, Text, Image as ImagePDF, Canvas } from '@react-pdf/renderer'
+import html2canvas from 'html2canvas';
+import domToPdf from 'dom-to-pdf';
+import domtoimage from 'dom-to-image-more';
+import Pdf from "react-to-pdf";
+import {jsPDF} from "jspdf";
 import {createFFmpeg, fetchFile} from '@ffmpeg/ffmpeg';
 const ffmpeg = createFFmpeg({log: true});
 
 var imgUrl = {leftArrow};
+const ref = React.createRef();
 
 const useStyles = makeStyles((theme) => ({
   icon: {
@@ -135,6 +127,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+//Set subtitle text
 const WhiteTextTypography = withStyles({
   root: {
     color: "#FFFFFF",
@@ -149,45 +142,38 @@ export default function Album() {
   const classes = useStyles();
   const location = useLocation();
 
+  //set state variables
   const[pageReady, setPageReady] = useState(0);
   const[newLayout, setnewLayout] = useState(0);
   const[newPlacement, setnewPlacement] = useState(0);
+  const[pdfImage, setPdfImage] = useState([]);
 
+  //get data from upload page
   const {keyframe, subtitle, timestamp} = location.state;
-
-  console.log("YO" + keyframe)
-  console.log("YOYO" + subtitle)
-  console.log("YOYOYO" + timestamp)
-
   const tileData = [];
 
-  console.log("LENGTH: " + keyframe.length)
-  console.log("LENGTH: " + timestamp.length)
+  console.log("K LENGTH: " + keyframe.length)
+  console.log("T LENGTH: " + timestamp.length)
 
+  //create array of undefined values for each keyframe
   for (var i=0; i<(keyframe.length+1); i++)
   {
     tileData.push(undefined)
-    console.log("IN ONE")
   }
 
-  for (var i=0; i<timestamp.length; i++)
-  {
-    console.log("IN THREE")
-    for (var j=0; j<keyframe.length; j++) {
-      console.log("IN FOUR")
-      if ((timestamp[i] >= j*2) && (timestamp[i] < (j+1)*2)) {
-        while (tileData[j] != undefined) {
+  //create subtitle array
+  for (var i=0; i<timestamp.length; i++) { //for each subtitle
+    for (var j=0; j<keyframe.length; j++) { //for each keyframe
+      if ((timestamp[i] >= j*2) && (timestamp[i] < (j+1)*2)) { //if subtitle within keyframe timestamp
+        while (tileData[j] != undefined) { //while position already filled, move forward 1
           j++
         }
-        tileData.splice(j, 1, subtitle[i])
+        tileData.splice(j, 1, subtitle[i]) //replace undefined with subtitle
       }
-      
     }
-    console.log("IN TWO")
   }
 
-  console.log("TILDATA" + tileData);
-
+  //set different layouts
   const l1 = [1, 1, 1, 1, 1, 1]
   const l1_2 = [1, 1, 1, 1, 1, 1, 1, 1]
   const l2 = [2, 1, 1, 2]
@@ -198,6 +184,7 @@ export default function Album() {
   let height = 190
   let width = 600
 
+  //change properties depending on layout type
   if (newLayout == 0) {
     if (newPlacement == 0) {
       layout = l1_2
@@ -245,6 +232,7 @@ export default function Album() {
   const noOfPagesTemp = keyframe.length/layout.length
   const noOfPages = Math.ceil(noOfPagesTemp)
 
+  //create mappable array depending on number of pages and panels per page
   for (var j=(noOfPages-noOfPages); j<noOfPages; j++) {
     for (var i=0; i<layout.length; i++) {
       final.push({
@@ -252,9 +240,7 @@ export default function Album() {
         text: tileData[i+(j*layout.length)],
         layout: layout[i]
       })
-    console.log("LAYOUT: " * layout[i])
     }
-    console.log("NOOFPAGES: " + noOfPages)
   }
 
   for (var i=(layout.length*pageReady); i<(layout.length*pageReady)+layout.length; i++) {
@@ -262,8 +248,9 @@ export default function Album() {
     page.push(final[i])
   }
 
+  //function to get next page
   const changePageForward = () => {
-    if (pageReady == (noOfPages-1)) {
+    if (pageReady == (noOfPages-1)) { //if on last page, don't change
       setPageReady(pageReady);
     }
     else{
@@ -271,8 +258,9 @@ export default function Album() {
     } 
   }
   
+  //function to get previous page
   const changePageBackward = () => {
-    if (pageReady == 0) {
+    if (pageReady == 0) { //if on last page, don't change
       setPageReady(pageReady);
     }
     else{
@@ -280,21 +268,25 @@ export default function Album() {
     }
   }
 
+  //function to set Layout 1
   const layout1 = () => {
     setnewLayout(0)
     console.log("LAYOUT1")
   }
 
+  //function to set Layout 2
   const layout2 = () => {
     setnewLayout(1)
     console.log("LAYOUT2")
   }
 
+  //function to set Layout 3
   const layout3 = () => {
     setnewLayout(2)
     console.log("LAYOUT3")
   }
 
+  //function to set subtitle placement
   const placement = () => {
     if (newPlacement == 0) {
       setnewPlacement(1)
@@ -308,9 +300,103 @@ export default function Album() {
     }
     console.log("PLACEMENT" + newPlacement)
   }
+  
 
-  console.log("WE HERE NOW::" + tileData)
-  console.log(tileData)
+  // html2canvas(document.querySelector("#grid1")).then(canvas => {
+  //   img = canvas.toDataURL("image/png")
+  // });
+
+  // var node = document.getElementById('grid1');
+ 
+  // domtoimage.toPng(node)
+  //   .then(function (dataUrl) {
+  //       //img = new Image();
+  //       img.src = dataUrl;
+  //       document.body.appendChild(img);
+  //       // setPdfImage(img)
+  //   })
+  //   .catch(function (error) {
+  //       console.error('oops, something went wrong!', error);
+  // });
+
+  
+
+  const imgArr = []
+
+  const call = async() => {
+    await pdfFunction()
+    await pdfSave()
+  }
+
+  const pdfPage = () => {
+    for (var i=0; i<2; i++) {
+      setPageReady(i)
+    }
+  }
+
+  const toPNG = () => {
+    var node = document.getElementById('grid1');
+
+    domtoimage.toPng(node)
+      .then(function (dataUrl) {
+          //img = new Image();
+          const img = new Image()
+          img.src = dataUrl;
+          document.body.appendChild(img);
+          imgArr.push(img)
+          setPdfImage(imgArr)
+          
+      })
+      .catch(function (error) {
+          console.error('oops, something went wrong!', error);
+    });
+  }
+
+  const pdfFunction = async() => {
+    // var element = document.getElementById('grid1');
+    // var options = {
+    //   filename: 'test.pdf'
+    // };
+    // domToPdf(element, options, function() {
+    //   console.log('done');
+    // });
+    
+    
+    // await toPNG()
+
+    
+    // var doc = new jsPDF()
+    // doc.text("Hello world!", 10, 10);
+    // doc.addImage(pdfImage[0], 'PNG', 15, 40, 180, 220)
+    // doc.save("a4.pdf");
+    
+
+    // domtoimage.toBlob(document.getElementById('grid1'))
+    // .then(function (blob) {
+    //     img.push(blob)
+    // });
+  }
+
+
+  const pdfSave = () => {
+  }
+
+  // doc.setFontSize(40)
+  // doc.text(35, 25, 'Paranyan loves jsPDF')
+  // doc.addImage(img, 'PNG', 15, 40, 180, 160)
+  // doc.save("a4.pdf");
+
+  //setPdfImage(img)
+
+  // document.body.appendChild(img);
+
+  // const MyDoc = () => (
+  //   <Document>
+  //     <Page>
+  //       <Text>Hello</Text>
+  //     </Page>
+  //   </Document>
+  // )
 
   return (
 
@@ -318,9 +404,9 @@ export default function Album() {
       <React.Fragment>
         <main>
           <Container className={classes.cardGrid} >
-            <div className={classes.root} ref={componentRef}>
+            <div className={classes.root} >
               <input type="image" id="image" className={classes.arrow} alt="Login" src={leftArrow} onClick={changePageBackward}></input>
-              <GridList id="grid1" cellHeight={height} style={{width: width}} cols={col}>
+              <GridList id="grid1" ref={ref} cellHeight={height} style={{width: width}} cols={col} >
               {page.map((page) => ( 
                 <GridListTile cols={page.layout || 1}>
                   <img src={page.img}/>
@@ -332,7 +418,6 @@ export default function Album() {
                       }}
                       style={{whiteSpace: 'normal !important', overflow: 'visible !important'}}
                     />
-                  
                 </GridListTile>
                 ))}
                 </GridList>
@@ -349,7 +434,6 @@ export default function Album() {
                           <CardContent style={{ height: 68, backgroundColor: 'black'}}>
                             <WhiteTextTypography
                               variant="body2"
-                              color="#fff !important"
                               component="p"
                             >
                               {page.text}
@@ -363,7 +447,7 @@ export default function Album() {
               <input type="image" id="image" className={classes.arrow} alt="Login" src={rightArrow} onClick={changePageForward}></input>
             </div>
             <ListSubheader style={{textAlign: "center"}} className={classes.heading}>Page {pageReady+1} / {noOfPages}</ListSubheader>
-            <Button variant="contained" color="primary" style={{marginRight: 5}} onClick={() => exportComponentAsJPEG(componentRef)} >
+            <Button variant="contained" color="primary" style={{marginRight: 5}} onClick={() => exportComponentAsJPEG(componentRef, {})} >
               Export As JPEG
             </Button>
             <Button variant="contained" color="primary" style={{marginRight: 5}} onClick={placement} >
@@ -378,6 +462,15 @@ export default function Album() {
             <Button variant="contained" color="primary" style={{marginRight: 5}} onClick={layout3} >
               Layout 3
             </Button>
+            {/* <Button variant="contained" color="primary" style={{marginRight: 5}} onClick={call} >
+              PDF
+            </Button>
+            <PDFDownloadLink document={<MyDoc />} fileName="somename.pdf">
+              {({ blob, url, loading, error }) => (loading ? 'Loading document...' : 'Download now!')}
+            </PDFDownloadLink>
+            <Pdf targetRef={ref} filename="code-example.pdf">
+              {({ toPdf }) => <button onClick={toPdf}>Generate Pdf</button>}
+            </Pdf> */}
           </Container>
         </main>
       </React.Fragment>
