@@ -29,7 +29,7 @@ export default function Album() {
         <AppBar position="relative">
           <Toolbar>
             {/* <CameraIcon className={classes.icon} /> */}
-            <Link className={classes.linkColour} to="/result">
+            <Link className={classes.linkColour} to="/">
                 <Typography variant="h6" color="white" noWrap>
                 Graphic Novel Subtitling
                 </Typography>
