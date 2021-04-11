@@ -36,7 +36,7 @@ ffmpeg.setLogger(({ type, message }) => {
 const useStyles = makeStyles((theme) => ({
   cardGrid: {
     paddingTop: theme.spacing(8),
-    paddingBottom: theme.spacing(20),
+    paddingBottom: theme.spacing(24),
     backgroundImage: 'url(${"backgroundImage"})',
   },
   card: {

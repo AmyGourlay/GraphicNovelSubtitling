@@ -12,6 +12,9 @@ import Upload from './Upload';
 const useStyles = makeStyles((theme) => ({
     linkColour: {
       color: 'white !important',
+      '@media print' : {
+        display: 'none'
+      }
     //   '&&&:before': {
     //   borderBottom: "none"
     //     }
