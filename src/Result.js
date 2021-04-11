@@ -219,6 +219,7 @@ export default function Album() {
   const[newPlacement, setnewPlacement] = useState(0);
   const[pdfImage, setPdfImage] = useState([]);
   const[title, setTitle] = useState('My Graphic Novel');
+  const[disabled, setDisabled] = useState(false);
 
 
   //get data from upload page
@@ -416,8 +417,11 @@ export default function Album() {
   const imgArr = []
 
   const call = async() => {
-    await setPageReady(0)
+    setDisabled(true)
+    setPageReady(0)
     await toPNG()
+    setDisabled(false)
+    setPageReady(0)
     //await pdfSave()
   }
 
@@ -544,11 +548,12 @@ export default function Album() {
             label="Name your graphic novel here"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            disabled={disabled}
           />
           <Typography className={classes.novelTitle}>{title}</Typography>
           <Container className={classes.cardGrid} >
             <div className={classes.root} >
-              <input type="image" id="image" className={classes.arrow} alt="Login" src={leftArrow} onClick={changePageBackward}></input>
+              <input type="image" id="image" className={classes.arrow} alt="Login" src={leftArrow} onClick={changePageBackward} disabled={disabled}></input>
               <GridList id="grid1" ref={ref} cellHeight={height} style={{width: width}} cols={col} >
               {page.map((page) => ( 
                 <GridListTile cols={page.layout || 1}>
@@ -587,7 +592,7 @@ export default function Album() {
                     </GridListTile>
                 ))}
               </GridList>
-              <input type="image" id="image" className={classes.arrow} alt="Login" src={rightArrow} onClick={changePageForward}></input>
+              <input type="image" id="image" className={classes.arrow} alt="Login" src={rightArrow} onClick={changePageForward} disabled={disabled}></input>
             </div>
             <ListSubheader style={{textAlign: "center", paddingBottom: '2%'}} className={classes.heading}>Page {pageReady+1} / {noOfPages}</ListSubheader>
             <Grid style={{border: '1px solid black'}} container spacing={4}>
@@ -602,13 +607,13 @@ export default function Album() {
               </Grid>
               <Grid item xs={5}>
                 <div style={{paddingBottom: "0%"}}>
-                  <ButtonBase id="bb1" variant="contained" color="primary" style={{marginRight: 10, border: "3px solid black"}} onClick={layout1} >
+                  <ButtonBase id="bb1" variant="contained" color="primary" style={{marginRight: 10, border: "3px solid black"}} onClick={layout1} disabled={disabled}>
                     <img className={classes.img} alt="complex" src={layoutImg1} />
                   </ButtonBase>
-                  <ButtonBase id="bb2" variant="contained" color="primary" style={{marginRight: 10, border: "3px solid grey"}} onClick={layout2} >
+                  <ButtonBase id="bb2" variant="contained" color="primary" style={{marginRight: 10, border: "3px solid grey"}} onClick={layout2} disabled={disabled}>
                     <img src={layoutImg2} />
                   </ButtonBase>
-                  <ButtonBase id="bb3" ariant="contained" color="primary" style={{marginRight: 10, border: "3px solid grey"}} onClick={layout3} >
+                  <ButtonBase id="bb3" ariant="contained" color="primary" style={{marginRight: 10, border: "3px solid grey"}} onClick={layout3} disabled={disabled}>
                     <img src={layoutImg3} />
                   </ButtonBase>
                 </div>
@@ -616,11 +621,11 @@ export default function Album() {
               <Grid item xs>
                 <div style={{paddingBottom: '0%'}}>
                   <div style={{paddingBottom: '5%'}}>
-                    <Button id="overlapBtn" variant="contained" color="primary" style={{marginRight: 5, border: "3px solid black"}} onClick={placement} >
+                    <Button id="overlapBtn" variant="contained" color="primary" style={{marginRight: 5, border: "3px solid black"}} onClick={placement} disabled={disabled}>
                       Subtitle Overlap
                     </Button>
                   </div>
-                  <Button id="belowBtn" variant="contained" color="primary" style={{marginRight: 5, border: "3px solid grey"}} onClick={placement} >
+                  <Button id="belowBtn" variant="contained" color="primary" style={{marginRight: 5, border: "3px solid grey"}} onClick={placement} disabled={disabled}>
                     Subtitle Below
                   </Button>
                 </div>
@@ -628,12 +633,12 @@ export default function Album() {
               <Grid item xs>
                 <div>
                   <div style={{paddingBottom: '5%'}}>
-                    <Button variant="contained" color="primary" style={{marginRight: 5}} onClick={call} >
+                    <Button variant="contained" color="primary" style={{marginRight: 5}} onClick={call} disabled={disabled}>
                       Create a PDF
                     </Button>
                   </div>
-                  <Link className={classes.linkColour} to="/" exact key="index">
-                    <Button variant="contained" color="primary" style={{marginRight: 5}}>
+                  <Link className={classes.linkColour} to="/" exact key="index" disabled={disabled}>
+                    <Button variant="contained" color="primary" style={{marginRight: 5}} disabled={disabled}>
                         Create another graphic novel
                     </Button>
                   </Link>

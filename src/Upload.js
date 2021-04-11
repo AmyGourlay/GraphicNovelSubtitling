@@ -18,25 +18,11 @@ const ffmpeg = createFFmpeg({log: true});
 
 const msgArr = [];
 
-//Get number of subtitles from ffmpeg log
-ffmpeg.setLogger(({ type, message }) => {
-    console.log("MESSAGE:::" + message);
-    if(message.includes("frame="))
-    {
-        var frameTemp = message.substring(
-            message.lastIndexOf("frame"), 
-            message.lastIndexOf("fps")
-        );
-        var frame = frameTemp.match(/\d+/)
-        msgArr.splice(0, 1, frame);
-    }
-  });
-
 
 const useStyles = makeStyles((theme) => ({
   cardGrid: {
     paddingTop: theme.spacing(8),
-    paddingBottom: theme.spacing(24),
+    paddingBottom: theme.spacing(29),
     backgroundImage: 'url(${"backgroundImage"})',
   },
   card: {
@@ -78,6 +64,7 @@ export default function Album() {
   const[subtitleImage, setSubtitleImage] = useState(uploadImage);
   const[videoFilename, setVideoFilename] = useState("Upload your video file here (.mp4)");
   const[subtitleFilename, setSubtitleFilename] = useState("Upload your subtitle file here (.srt)");
+  const[disabled, setDisabled] = useState(false);
 
 
   var re = /(?:\.([^.]+))?$/;
@@ -107,6 +94,19 @@ export default function Album() {
       await ffmpeg.load();
     }
     setReady(true);
+    //Get number of subtitles from ffmpeg log
+    ffmpeg.setLogger(({ type, message }) => {
+      console.log("MESSAGE:::" + message);
+      if(message.includes("frame="))
+      {
+          var frameTemp = message.substring(
+              message.lastIndexOf("frame"), 
+              message.lastIndexOf("fps")
+          );
+          var frame = frameTemp.match(/\d+/)
+          msgArr.splice(0, 1, frame);
+      }
+    });
   }
 
   useEffect(() => {
@@ -181,6 +181,8 @@ export default function Album() {
         document.getElementById('errorMsg').style.display = 'block';
       }
       else {
+        //document.getElementById('fileBtn').disabled = 'true';
+        setDisabled(true)
         document.getElementById('errorMsg').style.display = 'none';
         document.getElementById('circleProgress').style.display = 'block';
         document.getElementById('convertBtn').style.display = 'none';
@@ -208,10 +210,10 @@ export default function Album() {
               {cards.map((card) => (
                 <Grid item key={card} xs={12} sm={12} md={6}>
                   <Card className={classes.card}>
-                    <ButtonBase className={classes.image} type="file" variant="contained" component="label">
+                    <ButtonBase className={classes.image} type="file" variant="contained" component="label" disabled={disabled}>
                       <img className={classes.img} alt="complex" src={card.img} />
                       {/* {video && <video controls width="250" src={URL.createObjectURL(video)}></video>} */}
-                      <input type="file" hidden onChange={card.action}/>
+                      <input id="fileBtn" type="file" hidden onChange={card.action}/>
                     </ButtonBase>
                     <CardContent className={classes.cardContent}>
                       <Typography gutterBottom variant="h5" component="h2">
