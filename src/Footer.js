@@ -2,9 +2,6 @@ import React, { useEffect, useState } from 'react';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
-import MLink from '@material-ui/core/Link';
-import {BrowserRouter as Router, Switch, Route} from 'react-router-dom';
-import {Link} from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
   footer: {
