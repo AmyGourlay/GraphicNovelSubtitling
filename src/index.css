@@ -12,8 +12,12 @@ code {
     monospace;
 }
 
+#hiddenImage > img {
+  filter: grayscale(100%)
+}
+
 @media print {
-  img {
-    display: 'none',
+  #hiddenImage > img {
+    filter: grayscale(100%)
   }
 }

@@ -16,25 +16,13 @@ import GridListTile from '@material-ui/core/GridListTile';
 import GridListTileBar from '@material-ui/core/GridListTileBar';
 import ListSubheader from '@material-ui/core/ListSubheader';
 import ButtonBase from '@material-ui/core/ButtonBase';
-import IconButton from '@material-ui/core/IconButton';
 import Box from '@material-ui/core/Box';
-import {parseSync} from 'subtitle';
-import fs from 'fs';
-import parseSRT from 'parse-srt';
-import Result from './Result';
-import {BrowserRouter as Router, Switch, Route} from 'react-router-dom';
 import {Link} from 'react-router-dom';
 import {useLocation} from 'react-router-dom';
 import leftArrow from './assets/arrow-80-256.png';
 import rightArrow from './assets/arrow-57-256.png';
-import {exportComponentAsJPEG, exportComponentAsPDF} from 'react-component-export-image';
 import {useRef} from 'react';
-import { PDFDownloadLink, Document, Page, View, Text, Image as ImagePDF, Canvas } from '@react-pdf/renderer'
-import html2canvas from 'html2canvas';
-import domToPdf from 'dom-to-pdf';
 import domtoimage from 'dom-to-image-more';
-import Pdf from "react-to-pdf";
-import {jsPDF} from "jspdf";
 import layoutImg1 from './assets/Layout1Small.png';
 import layoutImg2 from './assets/Layout2Small.png';
 import layoutImg3 from './assets/Layout3SmallResize.png';
@@ -62,9 +50,6 @@ const useStyles = makeStyles((theme) => ({
     backgroundImage: 'url(${"backgroundImage"})',
     '@media print' : {
       display: 'none',
-      // '@page' : {
-      //   margin: '50px'
-      // }
     }
   },
   card: {
@@ -122,19 +107,8 @@ const useStyles = makeStyles((theme) => ({
     color: theme.palette.text.secondary,
   },
   img: {
-    // margin: 'auto',
-    // display: 'block',
-    // maxWidth: '100%',
-    // maxHeight: '100%',
-    // objectFit: 'cover'
     '@media print' : {
-      // display: 'none',
-      // '@page' : {
-      //   margin: '50px'
-      // }
-      // verticalAlign: 'middle',
       pageBreakAfter: 'always',
-      //display: 'none',
       position: 'absolute',
       width: '100%',
       height: '100%',
@@ -142,8 +116,6 @@ const useStyles = makeStyles((theme) => ({
       top: '50%',
       left: '50%',
       margin: '-150px 0 0 -150px'
-      //pageBreakBefore: 'always',
-      // verticalAlign: 'middle',
       
     },
   },
@@ -166,32 +138,12 @@ const useStyles = makeStyles((theme) => ({
     },
     
   },
-  frame: {
-
-  },
-  tileImg: {
-    width: '100%',
-    height: '100%'
-  },
-  textTile: {
-    position: 'absolute'
-  },
-  textField:{
-    '@media print' : {
-      display: 'none',
-    }
-  },
   novelTitle: {
     display: 'none',
     '@media print' : {
       pageBreakAfter: 'always',
       display: 'block',
       fontSize: '500%',
-      // position: 'absolute',
-      // zIndex: '15',
-      // top: '100%',
-      // left: '25%',
-      // margin: '-150px 0 0 -150px',
       textAlign: 'center',
       paddingTop: '45%',
     }
@@ -394,26 +346,6 @@ export default function Album() {
     console.log("PLACEMENT" + newPlacement)
   }
   
-
-  // html2canvas(document.querySelector("#grid1")).then(canvas => {
-  //   img = canvas.toDataURL("image/png")
-  // });
-
-  // var node = document.getElementById('grid1');
- 
-  // domtoimage.toPng(node)
-  //   .then(function (dataUrl) {
-  //       //img = new Image();
-  //       img.src = dataUrl;
-  //       document.body.appendChild(img);
-  //       // setPdfImage(img)
-  //   })
-  //   .catch(function (error) {
-  //       console.error('oops, something went wrong!', error);
-  // });
-
-  
-
   const imgArr = []
 
   const call = async() => {
@@ -422,14 +354,7 @@ export default function Album() {
     await toPNG()
     setDisabled(false)
     setPageReady(0)
-    //await pdfSave()
   }
-
-  // const pdfPage = () => {
-  //   for (var i=0; i<2; i++) {
-  //     setPageReady(i)
-  //   }
-  // }
 
   //function to print hidden images on the page for printing
   const toPNG = async () => {
@@ -439,14 +364,7 @@ export default function Album() {
     const img = new Array()
     var hiddenDiv = document.getElementById('hiddenImage')
     hiddenDiv.innerHTML = '';
-
     var title = document.getElementById('standard-helperText')
-
-    //console.log("OVER HERE" + imgArr.length)
-    // for(var i=0; i<imgArr.length; i++) {
-    //   hiddenDiv.removeChild(hiddenDiv.childNodes[0])
-    // }
-    //imgArr.splice(0, imgArr.length)
 
     for(var i=0; i<(noOfPages); i++) {
       await setPageReady(i)
@@ -461,15 +379,12 @@ export default function Album() {
 
       console.log("NODE: " + node)
 
+      //create images of each page
       await domtoimage.toPng(node)
         .then(function (dataUrl) {
             console.log("IN PNG")
             img[i] = new Image;
             img[i].src = dataUrl;
-
-            //document.body.appendChild(img).setAttribute('textAlign', 'center')
-            // document.body.appendChild("<div style={{paddingBottom: '100'}}>{img}</div>");
-            //document.getElementById('hiddenImage').appendChild(img[i]).css('img')
             document.getElementById('hiddenImage').appendChild(img[i]).setAttribute('width', '100%')
             imgArr.push(img[i])
             
@@ -479,61 +394,11 @@ export default function Album() {
       });
 
       console.log("OUT PNG")
-      
-      // var doc = new jsPDF()
-      // doc.text("Hello world!", 10, 10);
-      // doc.addImage(img[i], 'PNG', 15, 40, 180, 660)
-      // doc.save("a4.pdf");
-      //document.getElementById('hiddenImage').appendChild(img).setAttribute('justifyContent', 'center')
     }
     console.log("OUT LOOP")
     setPdfImage(imgArr)
     window.print()
-    //document.getElementById('hiddenImage').appendChild(img[1]).setAttribute('justifyContent', 'center')
   }
-
-  const pdfFunction = async() => {
-    // var element = document.getElementById('grid1');
-    // var options = {
-    //   filename: 'test.pdf'
-    // };
-    // domToPdf(element, options, function() {
-    //   console.log('done');
-    // });
-    
-    
-    // await toPNG()
-
-    
-    
-    
-
-    // domtoimage.toBlob(document.getElementById('grid1'))
-    // .then(function (blob) {
-    //     img.push(blob)
-    // });
-  }
-
-
-  const pdfSave = () => {
-  }
-
-  // doc.setFontSize(40)
-  // doc.text(35, 25, 'Paranyan loves jsPDF')
-  // doc.addImage(img, 'PNG', 15, 40, 180, 160)
-  // doc.save("a4.pdf");
-
-  //setPdfImage(img)
-
-  // document.body.appendChild(img);
-
-  // const MyDoc = () => (
-  //   <Document>
-  //     <Page>
-  //       <Text>Hello</Text>
-  //     </Page>
-  //   </Document>
-  // )
 
   return (
 
@@ -610,10 +475,10 @@ export default function Album() {
                   <ButtonBase id="bb1" variant="contained" color="primary" style={{marginRight: 10, border: "3px solid black"}} onClick={layout1} disabled={disabled}>
                     <img className={classes.img} alt="complex" src={layoutImg1} />
                   </ButtonBase>
-                  <ButtonBase id="bb2" variant="contained" color="primary" style={{marginRight: 10, border: "3px solid grey"}} onClick={layout2} disabled={disabled}>
+                  <ButtonBase id="bb2" variant="contained" color="primary" style={{marginRight: 10}} onClick={layout2} disabled={disabled}>
                     <img src={layoutImg2} />
                   </ButtonBase>
-                  <ButtonBase id="bb3" ariant="contained" color="primary" style={{marginRight: 10, border: "3px solid grey"}} onClick={layout3} disabled={disabled}>
+                  <ButtonBase id="bb3" ariant="contained" color="primary" style={{marginRight: 10}} onClick={layout3} disabled={disabled}>
                     <img src={layoutImg3} />
                   </ButtonBase>
                 </div>
@@ -625,7 +490,7 @@ export default function Album() {
                       Subtitle Overlap
                     </Button>
                   </div>
-                  <Button id="belowBtn" variant="contained" color="primary" style={{marginRight: 5, border: "3px solid grey"}} onClick={placement} disabled={disabled}>
+                  <Button id="belowBtn" variant="contained" color="primary" style={{marginRight: 5}} onClick={placement} disabled={disabled}>
                     Subtitle Below
                   </Button>
                 </div>
