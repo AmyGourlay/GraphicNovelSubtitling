@@ -8,34 +8,21 @@ import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import uploadImage from './assets/upload-3-256.png';
+import uploadedImage from './assets/checkmark-256.png';
 import Box from '@material-ui/core/Box';
 import parseSRT from 'parse-srt';
 import {Link} from 'react-router-dom';
-import LinearProgress from '@material-ui/core/LinearProgress';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import {createFFmpeg, fetchFile} from '@ffmpeg/ffmpeg';
 const ffmpeg = createFFmpeg({log: true});
 
 const msgArr = [];
 
-//Get number of subtitles from ffmpeg log
-ffmpeg.setLogger(({ type, message }) => {
-    console.log("MESSAGE:::" + message);
-    if(message.includes("frame="))
-    {
-        var frameTemp = message.substring(
-            message.lastIndexOf("frame"), 
-            message.lastIndexOf("fps")
-        );
-        var frame = frameTemp.match(/\d+/)
-        msgArr.splice(0, 1, frame);
-    }
-  });
-
 
 const useStyles = makeStyles((theme) => ({
   cardGrid: {
     paddingTop: theme.spacing(8),
-    paddingBottom: theme.spacing(20),
+    paddingBottom: theme.spacing(29),
     backgroundImage: 'url(${"backgroundImage"})',
   },
   card: {
@@ -55,7 +42,7 @@ const useStyles = makeStyles((theme) => ({
   },
   resultLink: {
       display: 'none',
-      paddingTop: '3%',
+      paddingTop: '2%',
   },
   progress: {
     display: 'none',
@@ -73,25 +60,53 @@ export default function Album() {
   const[subtitle, setSubtitle] = useState([]);
   const[keyframe, setKeyframe] = useState([]);
   const[timestamp, setTimestamp] = useState([]);
+  const[videoImage, setVideoImage] = useState(uploadImage);
+  const[subtitleImage, setSubtitleImage] = useState(uploadImage);
+  const[videoFilename, setVideoFilename] = useState("Upload your video file here (.mp4)");
+  const[subtitleFilename, setSubtitleFilename] = useState("Upload your subtitle file here (.srt)");
+  const[disabled, setDisabled] = useState(false);
+
+
+  var re = /(?:\.([^.]+))?$/;
+  var cardImage = uploadImage;
 
   const cards = [
     {
       heading: "Video",
-      desc: "Upload your video file here",
+      desc: "Upload your video file here (.mp4)",
+      err: videoFilename,
+      img: videoImage,
       index: 0,
-      action: (e) => setVideo(e.target.files?.item(0)) //set video file
+      action: (e) => {var files = e.target.files; var fileName = files[0].name; if (re.exec(fileName) == ".mp4,mp4") {setVideoFilename(fileName); setVideoImage(uploadedImage); setVideo(e.target.files?.item(0)); document.getElementById("fileErr").style.display = "none"} else {document.getElementById("fileErr").style.display = "block"}} //set video file
     },
     {
       heading: "Subtitle",
-      desc: "Upload your subtitle file here",
+      desc: "Upload your subtitle file here (.srt)",
+      err: subtitleFilename,
+      img: subtitleImage,
       index: 1,
-      action: (e) => setSubtitle(e.target.files?.item(0)) //set subtitle file
+      action: (e) => {var files = e.target.files; var fileName = files[0].name; if (re.exec(fileName) == ".srt,srt") {setSubtitleFilename(fileName); setSubtitleImage(uploadedImage); setSubtitle(e.target.files?.item(0)); document.getElementById("fileErr").style.display = "none"} else {document.getElementById("fileErr").style.display = "block"}} //set subtitle file
     },
   ];
 
   const load = async() => {
-    await ffmpeg.load();
+    if(!ffmpeg.isLoaded()) {
+      await ffmpeg.load();
+    }
     setReady(true);
+    //Get number of subtitles from ffmpeg log
+    ffmpeg.setLogger(({ type, message }) => {
+      console.log("MESSAGE:::" + message);
+      if(message.includes("frame="))
+      {
+          var frameTemp = message.substring(
+              message.lastIndexOf("frame"), 
+              message.lastIndexOf("fps")
+          );
+          var frame = frameTemp.match(/\d+/)
+          msgArr.splice(0, 1, frame);
+      }
+    });
   }
 
   useEffect(() => {
@@ -107,7 +122,7 @@ export default function Album() {
   // return () => {
   //     clearInterval(timer);
   //   };
-  }, [])
+  }, [progress])
 
 
   const convertToKeyframe = async () => {
@@ -159,9 +174,22 @@ export default function Album() {
   }
 
   const call = async() => {
-      // document.getElementById('progress').style.display = 'block';
-      await convertToKeyframe();
-      document.getElementById('resultLink').style.display = 'block';
+      console.log("VIDEO" + video)
+      console.log("SUBTITLE" + subtitle)
+      if (video == undefined || subtitle == undefined) {
+        // alert("No file selected")
+        document.getElementById('errorMsg').style.display = 'block';
+      }
+      else {
+        //document.getElementById('fileBtn').disabled = 'true';
+        setDisabled(true)
+        document.getElementById('errorMsg').style.display = 'none';
+        document.getElementById('circleProgress').style.display = 'block';
+        document.getElementById('convertBtn').style.display = 'none';
+        await convertToKeyframe();
+        document.getElementById('circleProgress').style.display = 'none';
+        document.getElementById('resultLink').style.display = 'block';
+      }
   }
 
   return ready ? (
@@ -177,21 +205,25 @@ export default function Album() {
       <React.Fragment>
         <main>
           <Container className={classes.cardGrid} maxWidth="md">
+            <Typography id="fileErr" style={{color: "red", paddingBottom: "2%", textAlign: "center", display: "none"}}>Incorrect file type uploaded. Please try again.</Typography>
             <Grid container spacing={10}>
               {cards.map((card) => (
                 <Grid item key={card} xs={12} sm={12} md={6}>
                   <Card className={classes.card}>
-                    <ButtonBase className={classes.image} type="file" variant="contained" component="label">
-                      <img className={classes.img} alt="complex" src={uploadImage} />
+                    <ButtonBase className={classes.image} type="file" variant="contained" component="label" disabled={disabled}>
+                      <img className={classes.img} alt="complex" src={card.img} />
                       {/* {video && <video controls width="250" src={URL.createObjectURL(video)}></video>} */}
-                      <input type="file" hidden onChange={card.action}/>
+                      <input id="fileBtn" type="file" hidden onChange={card.action}/>
                     </ButtonBase>
                     <CardContent className={classes.cardContent}>
                       <Typography gutterBottom variant="h5" component="h2">
                         {card.heading}
                       </Typography>
-                      <Typography>
+                      {/* <Typography>
                         {card.desc}
+                      </Typography> */}
+                      <Typography>
+                        {card.err}
                       </Typography>
                     </CardContent>
                   </Card>
@@ -201,14 +233,22 @@ export default function Album() {
             
             <div className={classes.button}>
               <Box textAlign='center'>
-              <Button variant="contained" color="primary" style={{justifyContent: 'center'}} onClick={call} >
+                <Typography id="errorMsg" style={{color: "red", paddingBottom: "2%", display: "none"}}>Please upload both a video and subtitle file before proceding.</Typography>
+                <Button id="convertBtn" variant="contained" color="primary" style={{justifyContent: 'center', paddingTop: "10"}} onClick={call} >
                     Convert
                 </Button>
-                <Link id="resultLink" className={classes.resultLink} to={{ pathname:"/result", state: {keyframe: keyframe, subtitle: subtitle, timestamp: timestamp}}}>
-                    <Button variant="contained" color="primary" style={{justifyContent: 'center'}}>
-                        Ready
-                    </Button>
-                </Link>
+                <Box id="circleProgress" style={{display: "none"}}>
+                  <CircularProgress/>
+                  <Typography>Please be patient. The conversion may take serveral minutes.</Typography>
+                </Box>
+                <Box id="resultLink" className={classes.resultLink}>
+                  <Typography style={{paddingBottom: "2%"}}>Conversion successful! Click here to view your graphic novel.</Typography>
+                  <Link to={{ pathname:"/result", state: {keyframe: keyframe, subtitle: subtitle, timestamp: timestamp}}}>
+                      <Button variant="contained" color="primary" style={{justifyContent: 'center'}}>
+                          Ready
+                      </Button>
+                  </Link>
+                </Box>
               </Box>
             </div>
             {/* <LinearProgress id="progress" className={classes.progress} variant="determinate" value={progress} /> */}

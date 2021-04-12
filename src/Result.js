@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import './App.css';
+import './index.css';
 import Button from '@material-ui/core/Button';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
@@ -8,10 +10,12 @@ import Typography from '@material-ui/core/Typography';
 import { withStyles } from "@material-ui/core/styles";
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
+import Grid from '@material-ui/core/Grid';
 import GridList from '@material-ui/core/GridList';
 import GridListTile from '@material-ui/core/GridListTile';
 import GridListTileBar from '@material-ui/core/GridListTileBar';
 import ListSubheader from '@material-ui/core/ListSubheader';
+import ButtonBase from '@material-ui/core/ButtonBase';
 import IconButton from '@material-ui/core/IconButton';
 import Box from '@material-ui/core/Box';
 import {parseSync} from 'subtitle';
@@ -31,6 +35,10 @@ import domToPdf from 'dom-to-pdf';
 import domtoimage from 'dom-to-image-more';
 import Pdf from "react-to-pdf";
 import {jsPDF} from "jspdf";
+import layoutImg1 from './assets/Layout1Small.png';
+import layoutImg2 from './assets/Layout2Small.png';
+import layoutImg3 from './assets/Layout3SmallResize.png';
+import TextField from '@material-ui/core/TextField';
 import {createFFmpeg, fetchFile} from '@ffmpeg/ffmpeg';
 const ffmpeg = createFFmpeg({log: true});
 
@@ -49,9 +57,15 @@ const useStyles = makeStyles((theme) => ({
     marginTop: theme.spacing(4),
   },
   cardGrid: {
-    paddingTop: theme.spacing(8),
+    paddingTop: theme.spacing(4),
     paddingBottom: theme.spacing(20),
     backgroundImage: 'url(${"backgroundImage"})',
+    '@media print' : {
+      display: 'none',
+      // '@page' : {
+      //   margin: '50px'
+      // }
+    }
   },
   card: {
     height: '100%',
@@ -113,6 +127,25 @@ const useStyles = makeStyles((theme) => ({
     // maxWidth: '100%',
     // maxHeight: '100%',
     // objectFit: 'cover'
+    '@media print' : {
+      // display: 'none',
+      // '@page' : {
+      //   margin: '50px'
+      // }
+      // verticalAlign: 'middle',
+      pageBreakAfter: 'always',
+      //display: 'none',
+      position: 'absolute',
+      width: '100%',
+      height: '100%',
+      zIndex: '15',
+      top: '50%',
+      left: '50%',
+      margin: '-150px 0 0 -150px'
+      //pageBreakBefore: 'always',
+      // verticalAlign: 'middle',
+      
+    },
   },
   title: {
     color: 'white',
@@ -125,6 +158,44 @@ const useStyles = makeStyles((theme) => ({
       'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 70%, rgba(0,0,0,0) 100%)',
     whiteSpace: 'normal !important'
   },
+  hiddenImage: {
+    display: 'none',
+    '@media print' : {
+      display: 'block',
+      position: 'absolute',
+    },
+    
+  },
+  frame: {
+
+  },
+  tileImg: {
+    width: '100%',
+    height: '100%'
+  },
+  textTile: {
+    position: 'absolute'
+  },
+  textField:{
+    '@media print' : {
+      display: 'none',
+    }
+  },
+  novelTitle: {
+    display: 'none',
+    '@media print' : {
+      pageBreakAfter: 'always',
+      display: 'block',
+      fontSize: '500%',
+      // position: 'absolute',
+      // zIndex: '15',
+      // top: '100%',
+      // left: '25%',
+      // margin: '-150px 0 0 -150px',
+      textAlign: 'center',
+      paddingTop: '45%',
+    }
+  }
 }));
 
 //Set subtitle text
@@ -147,6 +218,9 @@ export default function Album() {
   const[newLayout, setnewLayout] = useState(0);
   const[newPlacement, setnewPlacement] = useState(0);
   const[pdfImage, setPdfImage] = useState([]);
+  const[title, setTitle] = useState('My Graphic Novel');
+  const[disabled, setDisabled] = useState(false);
+
 
   //get data from upload page
   const {keyframe, subtitle, timestamp} = location.state;
@@ -243,6 +317,7 @@ export default function Album() {
     }
   }
 
+  //fill the page array with current page data
   for (var i=(layout.length*pageReady); i<(layout.length*pageReady)+layout.length; i++) {
     console.log("FINAL: " * final[i])
     page.push(final[i])
@@ -270,19 +345,31 @@ export default function Album() {
 
   //function to set Layout 1
   const layout1 = () => {
+    document.getElementById("bb1").style.border = "3px solid black"
+    document.getElementById("bb2").style.border = "none"
+    document.getElementById("bb3").style.border = "none"
     setnewLayout(0)
+    setPageReady(0)
     console.log("LAYOUT1")
   }
 
   //function to set Layout 2
   const layout2 = () => {
+    document.getElementById("bb1").style.border = "none"
+    document.getElementById("bb2").style.border = "3px solid black"
+    document.getElementById("bb3").style.border = "none"
     setnewLayout(1)
+    setPageReady(0)
     console.log("LAYOUT2")
   }
 
   //function to set Layout 3
   const layout3 = () => {
+    document.getElementById("bb1").style.border = "none"
+    document.getElementById("bb2").style.border = "none"
+    document.getElementById("bb3").style.border = "3px solid black"
     setnewLayout(2)
+    setPageReady(0)
     console.log("LAYOUT3")
   }
 
@@ -290,13 +377,19 @@ export default function Album() {
   const placement = () => {
     if (newPlacement == 0) {
       setnewPlacement(1)
+      setPageReady(0)
       document.getElementById('grid1').style.display = 'none';
       document.getElementById('grid2').style.removeProperty('display');
+      document.getElementById("overlapBtn").style.border = "none"
+      document.getElementById("belowBtn").style.border = "3px solid black"
     } 
     else if (newPlacement == 1) {
       setnewPlacement(0)
+      setPageReady(0)
       document.getElementById('grid2').style.display = 'none';
       document.getElementById('grid1').style.removeProperty('display');
+      document.getElementById("overlapBtn").style.border = "3px solid black"
+      document.getElementById("belowBtn").style.border = "none"
     }
     console.log("PLACEMENT" + newPlacement)
   }
@@ -324,32 +417,79 @@ export default function Album() {
   const imgArr = []
 
   const call = async() => {
-    await pdfFunction()
-    await pdfSave()
+    setDisabled(true)
+    setPageReady(0)
+    await toPNG()
+    setDisabled(false)
+    setPageReady(0)
+    //await pdfSave()
   }
 
-  const pdfPage = () => {
-    for (var i=0; i<2; i++) {
-      setPageReady(i)
+  // const pdfPage = () => {
+  //   for (var i=0; i<2; i++) {
+  //     setPageReady(i)
+  //   }
+  // }
+
+  //function to print hidden images on the page for printing
+  const toPNG = async () => {
+
+    await setPageReady(0)
+    var node
+    const img = new Array()
+    var hiddenDiv = document.getElementById('hiddenImage')
+    hiddenDiv.innerHTML = '';
+
+    var title = document.getElementById('standard-helperText')
+
+    //console.log("OVER HERE" + imgArr.length)
+    // for(var i=0; i<imgArr.length; i++) {
+    //   hiddenDiv.removeChild(hiddenDiv.childNodes[0])
+    // }
+    //imgArr.splice(0, imgArr.length)
+
+    for(var i=0; i<(noOfPages); i++) {
+      await setPageReady(i)
+      console.log("PAGE READY: " + pageReady)
+
+      if (newPlacement == 0) { 
+        node = document.getElementById('grid1');
+      }
+      else if (newPlacement == 1) {
+        node = document.getElementById('grid2');
+      }
+
+      console.log("NODE: " + node)
+
+      await domtoimage.toPng(node)
+        .then(function (dataUrl) {
+            console.log("IN PNG")
+            img[i] = new Image;
+            img[i].src = dataUrl;
+
+            //document.body.appendChild(img).setAttribute('textAlign', 'center')
+            // document.body.appendChild("<div style={{paddingBottom: '100'}}>{img}</div>");
+            //document.getElementById('hiddenImage').appendChild(img[i]).css('img')
+            document.getElementById('hiddenImage').appendChild(img[i]).setAttribute('width', '100%')
+            imgArr.push(img[i])
+            
+        })
+        .catch(function (error) {
+            console.error('oops, something went wrong!', error);
+      });
+
+      console.log("OUT PNG")
+      
+      // var doc = new jsPDF()
+      // doc.text("Hello world!", 10, 10);
+      // doc.addImage(img[i], 'PNG', 15, 40, 180, 660)
+      // doc.save("a4.pdf");
+      //document.getElementById('hiddenImage').appendChild(img).setAttribute('justifyContent', 'center')
     }
-  }
-
-  const toPNG = () => {
-    var node = document.getElementById('grid1');
-
-    domtoimage.toPng(node)
-      .then(function (dataUrl) {
-          //img = new Image();
-          const img = new Image()
-          img.src = dataUrl;
-          document.body.appendChild(img);
-          imgArr.push(img)
-          setPdfImage(imgArr)
-          
-      })
-      .catch(function (error) {
-          console.error('oops, something went wrong!', error);
-    });
+    console.log("OUT LOOP")
+    setPdfImage(imgArr)
+    window.print()
+    //document.getElementById('hiddenImage').appendChild(img[1]).setAttribute('justifyContent', 'center')
   }
 
   const pdfFunction = async() => {
@@ -365,10 +505,7 @@ export default function Album() {
     // await toPNG()
 
     
-    // var doc = new jsPDF()
-    // doc.text("Hello world!", 10, 10);
-    // doc.addImage(pdfImage[0], 'PNG', 15, 40, 180, 220)
-    // doc.save("a4.pdf");
+    
     
 
     // domtoimage.toBlob(document.getElementById('grid1'))
@@ -403,9 +540,20 @@ export default function Album() {
     <div className="App">
       <React.Fragment>
         <main>
+          <Box style={{paddingTop: "2%"}}>
+          <TextField
+            className={classes.textField}
+            style={{paddingTop: "0%", width: "30%"}}
+            id="standard-helperText"
+            label="Name your graphic novel here"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            disabled={disabled}
+          />
+          <Typography className={classes.novelTitle}>{title}</Typography>
           <Container className={classes.cardGrid} >
             <div className={classes.root} >
-              <input type="image" id="image" className={classes.arrow} alt="Login" src={leftArrow} onClick={changePageBackward}></input>
+              <input type="image" id="image" className={classes.arrow} alt="Login" src={leftArrow} onClick={changePageBackward} disabled={disabled}></input>
               <GridList id="grid1" ref={ref} cellHeight={height} style={{width: width}} cols={col} >
               {page.map((page) => ( 
                 <GridListTile cols={page.layout || 1}>
@@ -416,7 +564,7 @@ export default function Album() {
                         root: classes.titleBar,
                         title: classes.title,
                       }}
-                      style={{whiteSpace: 'normal !important', overflow: 'visible !important'}}
+                      style={{position: "absolute", width: "100%"}}
                     />
                 </GridListTile>
                 ))}
@@ -444,35 +592,64 @@ export default function Album() {
                     </GridListTile>
                 ))}
               </GridList>
-              <input type="image" id="image" className={classes.arrow} alt="Login" src={rightArrow} onClick={changePageForward}></input>
+              <input type="image" id="image" className={classes.arrow} alt="Login" src={rightArrow} onClick={changePageForward} disabled={disabled}></input>
             </div>
-            <ListSubheader style={{textAlign: "center"}} className={classes.heading}>Page {pageReady+1} / {noOfPages}</ListSubheader>
-            <Button variant="contained" color="primary" style={{marginRight: 5}} onClick={() => exportComponentAsJPEG(componentRef, {})} >
-              Export As JPEG
-            </Button>
-            <Button variant="contained" color="primary" style={{marginRight: 5}} onClick={placement} >
-              Subtitle Placement
-            </Button>
-            <Button variant="contained" color="primary" style={{marginRight: 5}} onClick={layout1} >
-              Layout 1
-            </Button>
-            <Button variant="contained" color="primary" style={{marginRight: 5}} onClick={layout2} >
-              Layout 2
-            </Button>
-            <Button variant="contained" color="primary" style={{marginRight: 5}} onClick={layout3} >
-              Layout 3
-            </Button>
-            {/* <Button variant="contained" color="primary" style={{marginRight: 5}} onClick={call} >
-              PDF
-            </Button>
-            <PDFDownloadLink document={<MyDoc />} fileName="somename.pdf">
-              {({ blob, url, loading, error }) => (loading ? 'Loading document...' : 'Download now!')}
-            </PDFDownloadLink>
-            <Pdf targetRef={ref} filename="code-example.pdf">
-              {({ toPdf }) => <button onClick={toPdf}>Generate Pdf</button>}
-            </Pdf> */}
+            <ListSubheader style={{textAlign: "center", paddingBottom: '2%'}} className={classes.heading}>Page {pageReady+1} / {noOfPages}</ListSubheader>
+            <Grid style={{border: '1px solid black'}} container spacing={4}>
+              <Grid item xs={5}>
+                <Typography style={{paddingBottom: "0%", fontSize: '30px'}}>Layout Options:</Typography>
+              </Grid>
+              <Grid item xs>
+                <Typography style={{paddingBottom: "0%", fontSize: '30px'}}>Subtitle Options:</Typography>
+              </Grid>
+              <Grid item xs>
+                <Typography style={{paddingBottom: "0%", fontSize: '30px'}}>Other Options:</Typography>
+              </Grid>
+              <Grid item xs={5}>
+                <div style={{paddingBottom: "0%"}}>
+                  <ButtonBase id="bb1" variant="contained" color="primary" style={{marginRight: 10, border: "3px solid black"}} onClick={layout1} disabled={disabled}>
+                    <img className={classes.img} alt="complex" src={layoutImg1} />
+                  </ButtonBase>
+                  <ButtonBase id="bb2" variant="contained" color="primary" style={{marginRight: 10, border: "3px solid grey"}} onClick={layout2} disabled={disabled}>
+                    <img src={layoutImg2} />
+                  </ButtonBase>
+                  <ButtonBase id="bb3" ariant="contained" color="primary" style={{marginRight: 10, border: "3px solid grey"}} onClick={layout3} disabled={disabled}>
+                    <img src={layoutImg3} />
+                  </ButtonBase>
+                </div>
+              </Grid>
+              <Grid item xs>
+                <div style={{paddingBottom: '0%'}}>
+                  <div style={{paddingBottom: '5%'}}>
+                    <Button id="overlapBtn" variant="contained" color="primary" style={{marginRight: 5, border: "3px solid black"}} onClick={placement} disabled={disabled}>
+                      Subtitle Overlap
+                    </Button>
+                  </div>
+                  <Button id="belowBtn" variant="contained" color="primary" style={{marginRight: 5, border: "3px solid grey"}} onClick={placement} disabled={disabled}>
+                    Subtitle Below
+                  </Button>
+                </div>
+              </Grid>
+              <Grid item xs>
+                <div>
+                  <div style={{paddingBottom: '5%'}}>
+                    <Button variant="contained" color="primary" style={{marginRight: 5}} onClick={call} disabled={disabled}>
+                      Create a PDF
+                    </Button>
+                  </div>
+                  <Link className={classes.linkColour} to="/" exact key="index" disabled={disabled}>
+                    <Button variant="contained" color="primary" style={{marginRight: 5}} disabled={disabled}>
+                        Create another graphic novel
+                    </Button>
+                  </Link>
+                </div>
+              </Grid>
+            </Grid>
           </Container>
+          </Box>
         </main>
+        <div id="hiddenImage" className={classes.hiddenImage}>
+        </div>
       </React.Fragment>
     </div>
   )

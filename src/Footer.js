@@ -6,23 +6,13 @@ import MLink from '@material-ui/core/Link';
 import {BrowserRouter as Router, Switch, Route} from 'react-router-dom';
 import {Link} from 'react-router-dom';
 
-function Copyright() {
-  return (
-    <Typography variant="body2" color="textSecondary" align="center">
-      {'Copyright © '}
-      <MLink color="inherit" href="https://material-ui.com/">
-        Your Website
-      </MLink>{' '}
-      {new Date().getFullYear()}
-      {'.'}
-    </Typography>
-  );
-}
-
 const useStyles = makeStyles((theme) => ({
   footer: {
     backgroundColor: theme.palette.background.paper,
-    padding: theme.spacing(6),
+    padding: theme.spacing(4),
+    '@media print' : {
+      display: 'none'
+    }
   },
 }));
 
@@ -38,9 +28,8 @@ export default function Album() {
             Graphic Novel Subtitling
           </Typography>
           <Typography variant="subtitle1" align="center" color="textSecondary" component="p">
-            Something here to give the footer a purpose!
+            By Amy Gourlay, University of Dundee
           </Typography>
-          <Copyright />
         </footer>
         {/* End footer */}
       </React.Fragment>
