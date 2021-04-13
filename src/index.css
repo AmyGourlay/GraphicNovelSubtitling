@@ -12,7 +12,7 @@ code {
     monospace;
 }
 
-#hiddenImage > img {
+/* #hiddenImage > img {
   filter: grayscale(100%)
 }
 
@@ -20,4 +20,4 @@ code {
   #hiddenImage > img {
     filter: grayscale(100%)
   }
-}
+} */

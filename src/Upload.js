@@ -85,7 +85,7 @@ export default function Album() {
       err: subtitleFilename,
       img: subtitleImage,
       index: 1,
-      action: (e) => {var files = e.target.files; var fileName = files[0].name; if (re.exec(fileName) == ".srt,srt") {setSubtitleFilename(fileName); setSubtitleImage(uploadedImage); setSubtitle(e.target.files?.item(0)); document.getElementById("fileErr").style.display = "none"} else {document.getElementById("fileErr").style.display = "block"}} //set subtitle file
+      action: (e) => {var files = e.target.files; var fileName = files[0].name; if (re.exec(fileName) == ".srt,srt") {setSubtitleFilename(fileName); setSubtitleImage(uploadedImage); setSubtitle(e.target.files?.item(0)); document.getElementById("fileErr").style.display = "none"} else {document.getElementById("fileErr").style.display = "block"; setSubtitle(undefined)}} //set subtitle file
     },
   ];
 
@@ -94,6 +94,8 @@ export default function Album() {
       await ffmpeg.load();
     }
     setReady(true);
+    setSubtitle(undefined);
+    setVideo(undefined);
     //Get number of subtitles from ffmpeg log
     ffmpeg.setLogger(({ type, message }) => {
       console.log("MESSAGE:::" + message);
