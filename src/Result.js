@@ -147,6 +147,11 @@ const useStyles = makeStyles((theme) => ({
       textAlign: 'center',
       paddingTop: '45%',
     }
+  },
+  textField: {
+    '@media print' : {
+      display: 'none'
+    }
   }
 }));
 
@@ -325,26 +330,29 @@ export default function Album() {
     console.log("LAYOUT3")
   }
 
-  //function to set subtitle placement
-  const placement = () => {
-    if (newPlacement == 0) {
-      setnewPlacement(1)
-      setPageReady(0)
-      document.getElementById('grid1').style.display = 'none';
-      document.getElementById('grid2').style.removeProperty('display');
-      document.getElementById("overlapBtn").style.border = "none"
-      document.getElementById("belowBtn").style.border = "3px solid black"
-    } 
-    else if (newPlacement == 1) {
-      setnewPlacement(0)
-      setPageReady(0)
-      document.getElementById('grid2').style.display = 'none';
-      document.getElementById('grid1').style.removeProperty('display');
-      document.getElementById("overlapBtn").style.border = "3px solid black"
-      document.getElementById("belowBtn").style.border = "none"
-    }
+  //function to set subtitle placement 1
+  const placement1 = () => {
+    setnewPlacement(1)
+    setPageReady(0)
+    document.getElementById('grid1').style.display = 'none';
+    document.getElementById('grid2').style.removeProperty('display');
+    document.getElementById("overlapBtn").style.border = "none"
+    document.getElementById("belowBtn").style.border = "3px solid black"
     console.log("PLACEMENT" + newPlacement)
   }
+
+
+  //function to set subtitle placement 2
+  const placement2 = () => {
+    setnewPlacement(0)
+    setPageReady(0)
+    document.getElementById('grid2').style.display = 'none';
+    document.getElementById('grid1').style.removeProperty('display');
+    document.getElementById("overlapBtn").style.border = "3px solid black"
+    document.getElementById("belowBtn").style.border = "none"
+    console.log("PLACEMENT" + newPlacement)
+  }
+  
   
   const imgArr = []
 
@@ -486,11 +494,11 @@ export default function Album() {
               <Grid item xs>
                 <div style={{paddingBottom: '0%'}}>
                   <div style={{paddingBottom: '5%'}}>
-                    <Button id="overlapBtn" variant="contained" color="primary" style={{marginRight: 5, border: "3px solid black"}} onClick={placement} disabled={disabled}>
+                    <Button id="overlapBtn" variant="contained" color="primary" style={{marginRight: 5, border: "3px solid black"}} onClick={placement2} disabled={disabled}>
                       Subtitle Overlap
                     </Button>
                   </div>
-                  <Button id="belowBtn" variant="contained" color="primary" style={{marginRight: 5}} onClick={placement} disabled={disabled}>
+                  <Button id="belowBtn" variant="contained" color="primary" style={{marginRight: 5}} onClick={placement1} disabled={disabled}>
                     Subtitle Below
                   </Button>
                 </div>
